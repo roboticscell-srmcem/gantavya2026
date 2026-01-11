@@ -1,0 +1,92 @@
+[
+  {
+    "year": 2023,
+    "theme": "Rise of the Machines",
+    "winners": [
+      {
+        "event": "Robo War",
+        "teamName": "Titan Crushers",
+        "college": "IIT Delhi",
+        "photo": "https://picsum.photos/seed/2023-robowar/400/300"
+      },
+      {
+        "event": "Line Follower",
+        "teamName": "Circuit Racers",
+        "college": "BITS Pilani",
+        "photo": "https://picsum.photos/seed/2023-line/400/300"
+      },
+      {
+        "event": "Drone Race",
+        "teamName": "Sky Hawks",
+        "college": "NIT Trichy",
+        "photo": "https://picsum.photos/seed/2023-drone/400/300"
+      }
+    ],
+    "highlights": [
+      "Over 1200 participants from 85+ colleges",
+      "Record-breaking Robo War battles",
+      "First-ever night drone racing"
+    ],
+    "footfallCount": 1200
+  },
+  {
+    "year": 2024,
+    "theme": "Automation Revolution",
+    "winners": [
+      {
+        "event": "Robo Soccer",
+        "teamName": "Goal Machines",
+        "college": "IIT Bombay",
+        "photo": "https://picsum.photos/seed/2024-soccer/400/300"
+      },
+      {
+        "event": "Maze Solver",
+        "teamName": "Path Finders",
+        "college": "IIIT Hyderabad",
+        "photo": "https://picsum.photos/seed/2024-maze/400/300"
+      },
+      {
+        "event": "Robotic Arm",
+        "teamName": "Precision Masters",
+        "college": "VIT Vellore",
+        "photo": "https://picsum.photos/seed/2024-arm/400/300"
+      }
+    ],
+    "highlights": [
+      "1500+ participants from 100+ institutions",
+      "Introduction of AI-based challenges",
+      "Live streaming with 50K+ viewers"
+    ],
+    "footfallCount": 1500
+  },
+  {
+    "year": 2025,
+    "theme": "Future of Robotics",
+    "winners": [
+      {
+        "event": "Robo War",
+        "teamName": "Mech Warriors",
+        "college": "IIT Madras",
+        "photo": "https://picsum.photos/seed/2025-robowar/400/300"
+      },
+      {
+        "event": "Line Follower",
+        "teamName": "Speed Demons",
+        "college": "DTU Delhi",
+        "photo": "https://picsum.photos/seed/2025-line/400/300"
+      },
+      {
+        "event": "Drone Race",
+        "teamName": "Aerial Aces",
+        "college": "Manipal Institute",
+        "photo": "https://picsum.photos/seed/2025-drone/400/300"
+      }
+    ],
+    "highlights": [
+      "Record 2000+ participants from 120+ colleges",
+      "International teams from 5 countries",
+      "Prize pool increased to ₹10 Lakhs"
+    ],
+    "footfallCount": 2000
+  }
+]

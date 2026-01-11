@@ -1,140 +1,95 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Download, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import EventCard from './card'
+import { getAllEvents, type EventData } from '@/lib/eventMiddleware'
 
-interface EventData {
-  slug: string;
-  name: string;
-  brief: string;
-  rulebookUrl?: string;
-}
+function Grid() {
+    const router = useRouter();
+    const [events, setEvents] = useState<EventData[]>([]);
+    const [loading, setLoading] = useState(true);
 
-const eventsData: EventData[] = [
-  {
-    slug: 'robo-soccer',
-    name: 'Robo Soccer',
-    brief: 'Build autonomous robots to compete in an intense soccer match. Score goals and defend your territory.',
-    rulebookUrl: '/rulebooks/robo-soccer.pdf',
-  },
-  {
-    slug: 'line-follower',
-    name: 'Line Follower',
-    brief: 'Design a robot that navigates complex tracks autonomously. Speed and precision are key to victory.',
-    rulebookUrl: '/rulebooks/line-follower.pdf',
-  },
-  {
-    slug: 'robo-war',
-    name: 'Robo War',
-    brief: 'Ultimate battle of machines. Build powerful combat robots and fight for supremacy in the arena.',
-    rulebookUrl: '/rulebooks/robo-war.pdf',
-  },
-  {
-    slug: 'maze-solver',
-    name: 'Maze Solver',
-    brief: 'Navigate through intricate mazes using sensors and algorithms. Find the shortest path to win.',
-    rulebookUrl: '/rulebooks/maze-solver.pdf',
-  },
-  {
-    slug: 'drone-race',
-    name: 'Drone Race',
-    brief: 'High-speed aerial competition through obstacle courses. Master control and precision in three dimensions.',
-    rulebookUrl: '/rulebooks/drone-race.pdf',
-  },
-  {
-    slug: 'robotic-arm',
-    name: 'Robotic Arm Challenge',
-    brief: 'Precision manipulation task using robotic arms. Complete complex tasks with accuracy and efficiency.',
-    rulebookUrl: '/rulebooks/robotic-arm.pdf',
-  },
-];
+    useEffect(() => {
+        async function fetchEvents() {
+            setLoading(true);
+            const eventsData = await getAllEvents();
+            setEvents(eventsData);
+            setLoading(false);
+        }
+        
+        fetchEvents();
+    }, []);
 
-function Events() {
-  return (
-    <section className="relative min-h-screen bg-[var(--color-bg-black)] py-24 px-6 md:px-16 lg:px-24">
-      {/* Background grid pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div 
-          className="absolute inset-0" 
-          style={{ 
-            backgroundImage: 'radial-gradient(circle at 2px 2px, var(--color-primary-cyan) 1px, transparent 0)', 
-            backgroundSize: '40px 40px' 
-          }}
-        />
-      </div>
+    // Icon mapping for different event categories
+    const getIcon = (category: string) => {
+        switch(category.toLowerCase()) {
+            case 'technology':
+                return (
+                    <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                );
+            case 'cultural':
+                return (
+                    <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                );
+            case 'hackathon':
+                return (
+                    <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                );
+            default:
+                return (
+                    <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                );
+        }
+    };
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-orbitron font-bold text-[var(--color-text-primary)] mb-6">
-            EVENTS
-          </h2>
-          <p className="text-[var(--color-text-secondary)] font-inter text-lg max-w-3xl mx-auto">
-            Compete in cutting-edge robotics challenges. Choose your battleground and prove your skills.
-          </p>
+    return (
+        <div className='w-full min-h-screen bg-black relative py-20'>
+            <div className='mt-8 h-20 w-90 text-2xl -ml-9 flex items-center justify-center gap-2'>
+                <span className='text-transparent bg-neutral-300 h-1 w-12'>..........</span>
+                <span className='text-white flex items-center justify-center'>What to expect</span>
+            </div>
+
+            <div className="mx-8 lg:mx-16 my-12 max-w-4xl text-6xl lg:text-7xl font-inter font-bold leading-tight">
+                <span className="text-white">
+                    What to expect at
+                    <br />
+                    <span className="text-neutral-500">Our Events</span>
+                </span>
+            </div>
+
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                </div>
+            ) : (
+                <div className='max-w-9xl mx-auto px-8 lg:px-16 py-12'>
+                    {/* Cards Grid - 2 columns on large screens, 1 on small */}
+                    <div className='grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 md:grid-cols-2 gap-6 mx-auto'>
+                        {events.map((event) => (
+                            <EventCard 
+                                key={event.slug}
+                                category={`FOR ${event.category.toUpperCase()} ENTHUSIASTS`}
+                                title={event.title}
+                                description={event.shortDescription}
+                                icon={getIcon(event.category)}
+                                onClick={() => router.push(`/events/${event.slug}`)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
-
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {eventsData.map((event) => (
-            <EventCard key={event.slug} event={event} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+    )
 }
 
-interface EventCardProps {
-  event: EventData;
-}
+export default Grid
 
-function EventCard({ event }: EventCardProps) {
-  return (
-    <div className="group relative bg-[var(--color-bg-charcoal)] rounded-lg overflow-hidden border border-[var(--color-bg-graphite)] hover:border-[var(--color-primary-orange)] transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary-orange)]/10">
-      {/* Hover gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary-orange)]/0 to-[var(--color-primary-cyan)]/0 group-hover:from-[var(--color-primary-orange)]/5 group-hover:to-[var(--color-primary-cyan)]/5 transition-all duration-300 pointer-events-none" />
-      
-      <div className="relative p-6 flex flex-col h-full">
-        {/* Event Name */}
-        <Link href={`/events/${event.slug}`} className="group/title">
-          <h3 className="text-2xl md:text-3xl font-orbitron font-bold text-[var(--color-text-primary)] mb-3 group-hover/title:text-[var(--color-primary-orange)] transition-colors duration-300">
-            {event.name}
-          </h3>
-        </Link>
-
-        {/* Brief Description */}
-        <p className="text-[var(--color-text-secondary)] font-inter text-sm md:text-base mb-6 flex-grow leading-relaxed">
-          {event.brief}
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-3">
-          {/* Register Button */}
-          <Link 
-            href={`/events/${event.slug}/register`}
-            className="w-full bg-muted-foreground text-[var(--color-bg-black)] px-4 py-3 rounded-md font-exo-2 font-semibold text-center hover:shadow-lg hover:shadow-[var(--color-primary-orange)]/30 transition-all duration-300 flex items-center justify-center gap-2 group/btn"
-          >
-            Register Now
-            <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform duration-300" />
-          </Link>
-
-          {/* Download Rulebook Button */}
-          {event.rulebookUrl && (
-            <a 
-              href={event.rulebookUrl}
-              download
-              className="w-full bg-[var(--color-bg-slate)] text-[var(--color-text-primary)] px-4 py-3 rounded-md font-exo-2 font-semibold text-center border border-[var(--color-bg-graphite)] hover:border-[var(--color-primary-cyan)] hover:bg-[var(--color-bg-graphite)] transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Download size={16} />
-              Rulebook
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default Events;

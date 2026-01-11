@@ -1,65 +1,88 @@
-import React from 'react';
-import SponsorCard from '../ui/sponsor-card';
-import { cn } from '@/lib/utils';
-
-const sponsorData = [
-  { name: 'Oppo', imageUrl: '/vercel.svg' },
-  { name: 'Udemy', imageUrl: '/window.svg' },
-  { name: 'JBL', imageUrl: '/file.svg' },
-  { name: 'Qualium', imageUrl: '/globe.svg' },
-  { name: 'Seneca', imageUrl: '/window.svg' },
-  { name: 'Paulo', imageUrl: '/vercel.svg' },
-];
+import React from "react";
+import Image from "next/image";
 
 function Sponsors() {
+  const sponsors = [
+    {
+      title: "Google",
+      icon: "/sponsors/google.svg",
+      href: "https://google.com",
+    },
+    {
+      title: "NVIDIA",
+      icon: "/sponsors/nvidia-wordmark-dark.svg",
+      href: "https://www.nvidia.com",
+    },
+    {
+      title: "Amazon Web Services",
+      icon: "/sponsors/aws_dark.svg",
+      href: "https://aws.amazon.com",
+    },
+    {
+      title: "Microsoft",
+      icon: "/sponsors/microsoft.svg",
+      href: "https://www.microsoft.com",
+    },
+    {
+      title: "OpenAI",
+      icon: "/sponsors/openai_wordmark_dark.svg",
+      href: "https://openai.com",
+    },
+    {
+      title: "Meta",
+      icon: "/sponsors/meta.svg",
+      href: "https://about.meta.com",
+    },
+  ];
+
   return (
-    <section className="relative min-h-screen bg-[var(--color-bg-black)] py-24 px-6 md:px-16 lg:px-24">
-      {/* Background grid pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div 
-          className="absolute inset-0" 
-          style={{ 
-            backgroundImage: 'radial-gradient(circle at 2px 2px, var(--color-primary-orange) 1px, transparent 0)', 
-            backgroundSize: '40px 40px' 
-          }}
-        />
+    <div className="relative w-full min-h-screen pb-26">
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10"></div>
+
+      <div className="mx-4 h-20 w-60 text-2xl flex items-center justify-center gap-2 pt-34">
+        <span className="bg-neutral-300 h-1 w-12"></span>
+        <span className="text-white flex items-center justify-center">
+          Sponsorships
+        </span>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-orbitron font-bold text-[var(--color-text-primary)] mb-6">
-            OUR SPONSORS
-          </h2>
-          <p className="text-[var(--color-text-secondary)] font-inter text-lg max-w-3xl mx-auto">
-            Empowering innovation through strategic partnerships with industry leaders
-          </p>
-        </div>
+      <div className="m-12 h-auto w-full text-5xl md:text-7xl font-bold tracking-tighter">
+        <span className="text-white">Meet our partners who make </span>
+        <br />
+        <span className="text-neutral-500">exceptional events possible</span>
+      </div>
 
-        {/* Sponsors Grid - 3 columns, 2 rows with separators */}
-        <div className="max-w-6xl mx-auto border border-[var(--color-bg-charcoal)] rounded-lg overflow-hidden">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-            {sponsorData.map((sponsor, index) => (
-              <div
+      <div className="flex flex-col items-center justify-center py-12 px-8">
+        <div className="w-full max-w-7xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8">
+            {sponsors.map((item, index) => (
+              <a
                 key={index}
-                className={cn(
-                  "relative",
-                  // Right border for all except last in row (0, 1 get border; 2 doesn't)
-                  index % 3 !== 2 && "border-r border-[var(--color-bg-charcoal)]",
-                  // Bottom border for first row (indices 0, 1, 2)
-                  index < 3 && "border-b border-[var(--color-bg-charcoal)]"
-                )}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-neutral-900 rounded-2xl p-6 flex flex-col gap-3 items-center justify-center hover:bg-neutral-800 transition-all duration-300 border border-neutral-800 hover:border-blue-600 hover:scale-105 aspect-video"
               >
-                <SponsorCard
-                  name={sponsor.name}
-                  imageUrl={sponsor.imageUrl}
-                />
-              </div>
+                <div className="relative h-16 w-full flex items-center justify-center">
+                  <Image
+                    src={item.icon}
+                    alt={item.title}
+                    width={200}
+                    height={64}
+                    className="object-contain h-full w-auto"
+                  />
+                </div>
+                <div className="text-blue-400 text-xl font-semibold text-center">
+                  {item.title}
+                </div>
+              </a>
             ))}
           </div>
-        </div>      
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-20"></div>
     </div>
-    </section>
   );
 }
 

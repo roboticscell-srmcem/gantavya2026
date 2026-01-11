@@ -1,16 +1,18 @@
 import React from 'react'
-import MainBg from '@/components/spline/spline'
+import Hero from '@/components/layout/hero'
 import About from '@/components/blocks/about'
 import Sponsors from '@/components/blocks/sponsors'
 import Events from '@/components/blocks/events'
+import FAQ from '@/components/blocks/faq'
 
 function Page() {
   return (
     <div>
-      <MainBg/>
+      <Hero/>
       <About/>
       <Events/>
       <Sponsors/>
+      <FAQ/>
     </div>
   )
 }

@@ -1,6 +1,51 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@keyframes anniversaryPulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 25px #FF6A00); 
+  }
+  50% { 
+    filter: drop-shadow(0 0 50px #FFD700); 
+  }
+}
+
+@font-face {
+  font-family: 'Barbra';
+  src: url('/font/barbra-font/Barbra-Regular.woff2') format('woff2'),
+       url('/font/barbra-font/Barbra-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barbra';
+  src: url('/font/barbra-font/Barbra-Italic.woff2') format('woff2'),
+       url('/font/barbra-font/Barbra-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barbra';
+  src: url('/font/barbra-font/Barbra-High.woff2') format('woff2'),
+       url('/font/barbra-font/Barbra-High.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Barbra';
+  src: url('/font/barbra-font/Barbra-HighItalic.woff2') format('woff2'),
+       url('/font/barbra-font/Barbra-HighItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -8,8 +53,9 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-space-mono);
-  --font-orbitron: var(--font-orbitron);
-  --font-exo-2: var(--font-exo-2);
+  --font-barbra: 'Barbra', sans-serif;
+  --font-bricolage: var(--font-bricolage);
+  --font-poppins: var(--font-poppins);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -173,14 +219,6 @@
 }
 
 /* Font utility classes */
-
-/* Orbitron - Variable font (400-900) */
-.font-orbitron {
-  font-family: var(--font-orbitron), sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-}
-
 /* Space Mono classes */
 .space-mono-regular {
   font-family: var(--font-space-mono), monospace;
@@ -213,9 +251,27 @@
   font-style: normal;
 }
 
-/* Exo 2 - Variable font (100-900) */
-.font-exo-2 {
-  font-family: var(--font-exo-2), sans-serif;
+.font-poppins {
+  font-family: var(--font-poppins), sans-serif;
   font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.font-bricolage {
+  font-family: var(--font-bricolage), serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+/* Barbra - Local font */
+.font-barbra {
+  font-family: 'Barbra', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.font-barbra-high {
+  font-family: 'Barbra', sans-serif;
+  font-weight: 700;
   font-style: normal;
 }

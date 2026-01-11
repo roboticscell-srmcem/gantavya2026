@@ -118,7 +118,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-4">
                 {['Home', 'About Us', 'Past Events', 'Sponsors'].map((link) => (
                   <div key={link} className="menu-link-item overflow-hidden">
-                    <p className="text-5xl md:text-7xl font-orbitron font-medium tracking-tighter hover:text-[var(--color-primary-orange)] hover:drop-shadow-[0_0_15px_rgba(255,69,0,0.5)] cursor-pointer transition-all duration-300">
+                    <p className="text-5xl md:text-7xl font-inter font-bold tracking-tighter hover:text-[var(--color-primary-orange)] hover:drop-shadow-[0_0_15px_rgba(255,69,0,0.5)] cursor-pointer transition-all duration-300">
                       {link}
                     </p>
                   </div>
