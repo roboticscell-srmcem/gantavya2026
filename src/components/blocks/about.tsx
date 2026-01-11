@@ -19,7 +19,7 @@ function About() {
       tagName: "span",
     });
 
-    gsap.from(type.chars, {
+    const animation = gsap.from(type.chars, {
       scrollTrigger: {
         trigger: containerRef.current,
         start: "top 85%",
@@ -34,7 +34,8 @@ function About() {
 
     return () => {
       type.revert();
-      ScrollTrigger.kill();
+      animation.scrollTrigger?.kill();
+      animation.kill();
     };
   }, []);
 
