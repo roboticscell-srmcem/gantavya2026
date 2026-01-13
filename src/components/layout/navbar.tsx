@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import Lenis from 'lenis';
@@ -75,13 +76,38 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      toggleMenu();
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 800);
+    }
+  };
+
+  const handleNavClick = (link: string) => {
+    if (link === 'Home') {
+      toggleMenu();
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 800);
+    } else if (link === 'About Us') {
+      scrollToSection('about');
+    } else if (link === 'Past Events') {
+      scrollToSection('gallery');
+    } else if (link === 'Sponsors') {
+      scrollToSection('sponsors');
+    }
+  };
+
   return (
-    <div ref={containerRef} className="relative text-white font-inter">
+    <div ref={containerRef} className="relative text-white">
       {/* Top Navigation Bar */}
       <nav className="fixed top-0 left-0 w-screen flex justify-between items-center p-4 sm:p-6 md:p-8 z-[100] pointer-events-none bg-gradient-to-b from-black/80 via-black/40 to-transparent mx-auto">
-        <div className="logo pointer-events-auto w-20 h-20 sm:w-24 sm:h-24">
+        <Link href="/" className="logo pointer-events-auto w-14 h-14 sm:w-18 sm:h-18 cursor-pointer">
           <img src="/logo.svg" alt="Logo" className="w-full h-full object-contain" />
-        </div>
+        </Link>
         
         <div 
           className="toggle-btn flex items-center gap-2 sm:gap-4 cursor-pointer pointer-events-auto"
@@ -118,7 +144,10 @@ const Navbar = () => {
               <div className="flex flex-col gap-3 sm:gap-4">
                 {['Home', 'About Us', 'Past Events', 'Sponsors'].map((link) => (
                   <div key={link} className="menu-link-item overflow-hidden">
-                    <p className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter hover:text-[var(--color-primary)] cursor-pointer transition-all duration-300">
+                    <p 
+                      onClick={() => handleNavClick(link)}
+                      className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter hover:text-[var(--color-primary)] cursor-pointer transition-all duration-300"
+                    >
                       {link}
                     </p>
                   </div>
@@ -127,9 +156,15 @@ const Navbar = () => {
               {/* Secondary Links/Tags */}
               <div className="flex flex-col gap-2 pt-6 md:pt-12 text-[var(--color-text-tertiary)] uppercase text-xs tracking-widest">
                 <p className="mb-4 text-[var(--color-text-secondary)]/50">Follow Us</p>
-                <div className="menu-link-item overflow-hidden"><p className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300">Instagram</p></div>
-                <div className="menu-link-item overflow-hidden"><p className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300">Twitter</p></div>
-                <div className="menu-link-item overflow-hidden"><p className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300">LinkedIn</p></div>
+                <div className="menu-link-item overflow-hidden">
+                  <a href="https://www.instagram.com/srmcem_robotics/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Instagram</a>
+                </div>
+                <div className="menu-link-item overflow-hidden">
+                  <a href="https://twitter.com/srmcem_robotics" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Twitter</a>
+                </div>
+                <div className="menu-link-item overflow-hidden">
+                  <a href="https://www.linkedin.com/company/srmcem-robotics/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">LinkedIn</a>
+                </div>
               </div>
             </div>
 
@@ -137,7 +172,7 @@ const Navbar = () => {
             <div className="menu-footer flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 sm:gap-0 border-t border-[var(--color-primary-cyan)]/20 pt-6 sm:pt-10 text-xs text-[var(--color-text-tertiary)] uppercase tracking-widest">
               <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 md:gap-20">
                 <div><p>Location</p><p className="text-white mt-2">Lucknow, Uttar Pradesh</p><p className="text-white mt-1">India</p></div>
-                <div><p>Inquiries</p><p className="text-white mt-2">hello@grobots.com</p></div>
+                <div><p>Inquiries</p><a href="mailto:hello@grobots.com" className="text-white mt-2 hover:text-[var(--color-primary-cyan)] transition-colors block">hello@grobots.com</a></div>
               </div>
               <p className="text-[10px] sm:text-xs">© 2026  SRMCEM ROBOTICS CLUB</p>
             </div>

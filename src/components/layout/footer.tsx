@@ -1,29 +1,37 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
 
 function Footer() {
   const [hoveredNav, setHoveredNav] = useState<number | null>(null);
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const navItems = [
-    { label: 'Speakers', href: '/speakers' },
-    { label: 'Agenda', href: '/agenda' },
-    { label: 'Venue', href: '/venue' },
-    { label: 'Contact', href: '/contact' },
+    { label: 'About', href: '#about' },
+    { label: 'Events', href: '#events' },
+    { label: 'Gallery', href: '#gallery' },
+    { label: 'Sponsors', href: '#sponsors' },
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Instagram, href: '#', label: 'Instagram' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
+    { icon: Facebook, href: 'https://www.facebook.com/srmcemrobotics', label: 'Facebook' },
+    { icon: Instagram, href: 'https://www.instagram.com/srmcem_robotics/', label: 'Instagram' },
+    { icon: Linkedin, href: 'https://www.linkedin.com/company/srmcem-robotics/', label: 'LinkedIn' },
+    { icon: Twitter, href: 'https://twitter.com/srmcem_robotics', label: 'Twitter' },
   ];
 
   return (
     <footer className='relative w-full min-h-screen bg-black text-white overflow-hidden flex flex-col'>      
       {/* Gradient Background Effect */}
-      <div className='absolute inset-0 bg-gradient-to-b from-black via-blue-950/20 to-blue-900/30' />
+      <div className='absolute inset-0 bg-gradient-to-b from-black via-red-950/20 to-red-900/30' />
       
       {/* Top Section - Social + Nav */}
       <div className='relative z-10 px-4 sm:px-6 md:px-8 lg:px-16 pt-20 sm:pt-24 md:pt-32'>
@@ -36,6 +44,8 @@ function Footer() {
                 <a
                   key={index}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className='w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-white/30 flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300'
                 >
@@ -48,22 +58,22 @@ function Footer() {
           {/* Navigation Pills */}
           <div className='flex flex-wrap gap-2 sm:gap-3'>
             {navItems.map((item, index) => (
-              <a
+              <button
                 key={index}
-                href={item.href}
+                onClick={() => scrollToSection(item.href.substring(1))}
                 onMouseEnter={() => setHoveredNav(index)}
                 onMouseLeave={() => setHoveredNav(null)}
-                className='relative text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 text-xs sm:text-sm font-medium overflow-hidden group'
+                className='relative text-white px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 text-xs sm:text-sm font-medium overflow-hidden group cursor-pointer'
               >
                 <span 
-                  className={`absolute inset-0 bg-blue-700 rounded-full transition-transform duration-150 ease-out ${
+                  className={`absolute inset-0 bg-orange-600 rounded-full transition-transform duration-150 ease-out ${
                     hoveredNav === index 
                       ? 'translate-y-0' 
                       : 'translate-y-full'
                   }`}
                 />
                 <span className='relative z-10'>{item.label}</span>
-              </a>
+              </button>
             ))}
           </div>
         </div>

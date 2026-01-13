@@ -40,13 +40,13 @@ function About() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-full bg-background py-16 sm:py-20 lg:py-28">
+    <section id="about" className="relative w-full min-h-full bg-background py-16 sm:py-20 lg:py-28">
       <div
         ref={containerRef}
         className="mx-auto max-w-7xl px-4 sm:px-4 lg:px-6"
       >
         <div className="flex items-start justify-start">
-          <div className="max-w-4xl">
+          <div className="max-w-5xl">
             <p
               ref={textRef}
               className="

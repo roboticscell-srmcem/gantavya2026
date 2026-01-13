@@ -8,103 +8,87 @@ function Gallery() {
         {
             id: "1",
             img: "/images/g-1.jpg",
-            url: "#",
             height: 400,
         },
         {
             id: "2",
             img: "/images/g-2.jpg",
-            url: "#",
             height: 650,
         },
         {
             id: "3",
             img: "/images/g-3.jpg",
-            url: "#",
             height: 400,
         },
         {
             id: "4",
             img: "/images/g-4.jpg",
-            url: "#",
             height: 350,
         },
         {
             id: "5",
             img: "/images/g-5.jpg",
-            url: "#",
             height: 450,
         },
         {
             id: "6",
             img: "/images/g-6.jpg",
-            url: "#",
             height: 300,
         },
         {
             id: "7",
             img: "/images/g-7.jpg",
-            url: "#",
             height: 500,
         },
         {
             id: "8",
             img: "/images/g-8.jpg",
-            url: "#",
             height: 350,
         },
         {
             id: "9",
             img: "/images/g-9.jpg",
-            url: "#",
             height: 400,
         },
         {
             id: "10",
             img: "/images/g-10.jpg",
-            url: "#",
             height: 380,
         },
         {
             id: "11",
             img: "/images/g-11.jpg",
-            url: "#",
             height: 420,
         },
         {
             id: "12",
             img: "/images/g-12.jpg",
-            url: "#",
             height: 360,
         },
         {
             id: "13",
             img: "/images/g-13.jpg",
-            url: "#",
             height: 480,
         },
         {
             id: "14",
             img: "/images/g-14.jpg",
-            url: "#",
             height: 390,
         },
         {
             id: "15",
             img: "/images/g-15.jpeg",
-            url: "#",
             height: 390,
         },
         {
             id: "16",
             img: "/images/g-16.jpg",
-            url: "#",
             height: 390,
         },
     ];
 
   return (
-    <section className="relative w-full min-h-screen bg-black py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
+    <section id="gallery" className="relative w-full min-h-screen bg-black py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
       {/* Gradient overlays for smooth transitions */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10"></div>
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10"></div>

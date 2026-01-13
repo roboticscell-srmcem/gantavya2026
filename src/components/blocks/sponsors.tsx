@@ -36,7 +36,7 @@ function Sponsors() {
   ];
 
   return (
-    <div className="relative w-full min-h-screen pb-16 md:pb-26">
+    <div id="sponsors" className="relative w-full min-h-screen pb-16 md:pb-26">
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10"></div>
 
       <div className="mx-4 sm:mx-6 md:mx-8 h-20 w-auto max-w-xs text-xl sm:text-2xl flex items-center justify-center gap-2 pt-20 sm:pt-28 md:pt-34">
@@ -61,7 +61,7 @@ function Sponsors() {
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-neutral-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-2 sm:gap-3 items-center justify-center hover:bg-neutral-800 transition-all duration-300 border border-neutral-800 hover:border-blue-600 hover:scale-105 aspect-video"
+                className="bg-neutral-900 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-2 sm:gap-3 items-center justify-center hover:bg-neutral-800 transition-all duration-300 border border-neutral-800 hover:border-orange-600 hover:scale-105 aspect-video"
               >
                 <div className="relative h-12 sm:h-14 md:h-16 w-full flex items-center justify-center">
                   <Image
@@ -72,7 +72,7 @@ function Sponsors() {
                     className="object-contain h-full w-auto max-w-full"
                   />
                 </div>
-                <div className="text-blue-400 text-base sm:text-lg md:text-xl font-semibold text-center">
+                <div className="text-orange-400 text-base sm:text-lg md:text-xl font-semibold text-center">
                   {item.title}
                 </div>
               </a>

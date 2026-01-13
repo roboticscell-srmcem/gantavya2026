@@ -233,8 +233,8 @@ export function RegistrationForm({
           </div>
 
           {/* Info Note */}
-          <div className="p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
-            <p className="text-sm text-blue-200">
+          <div className="p-4 bg-orange-900/20 border border-orange-700/50 rounded-lg">
+            <p className="text-sm text-orange-200">
               <strong>Note:</strong> You can add team members after completing initial registration. 
               A confirmation email will be sent with further instructions.
             </p>
@@ -252,7 +252,7 @@ export function RegistrationForm({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
               disabled={submitStatus === 'success'}
             >
               {submitStatus === 'success' ? 'Registered!' : 'Register Now'}
