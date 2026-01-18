@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
@@ -54,7 +56,26 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    // Create a cookie-based client for auth (to properly set session cookies)
+    const cookieStore = await cookies()
+    const cookiesToSet: { name: string; value: string; options: any }[] = []
+    
+    const authClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookies) {
+            cookiesToSet.push(...cookies)
+          },
+        },
+      }
+    )
+
+    const { data: authData, error: authError } = await authClient.auth.signInWithPassword({
       email: adminUser.email,
       password: password,
     })
@@ -72,7 +93,8 @@ export async function POST(request: Request) {
       .update({ last_login: new Date().toISOString() })
       .eq('id', adminUser.id)
 
-    return NextResponse.json({
+    // Create response and set cookies
+    const response = NextResponse.json({
       success: true,
       user: {
         id: adminUser.id,
@@ -81,6 +103,13 @@ export async function POST(request: Request) {
         role: adminUser.role,
       }
     })
+
+    // Apply all auth cookies to the response
+    cookiesToSet.forEach(({ name, value, options }) => {
+      response.cookies.set(name, value, options)
+    })
+
+    return response
 
   } catch (error: any) {
     console.error('Login error:', error)
