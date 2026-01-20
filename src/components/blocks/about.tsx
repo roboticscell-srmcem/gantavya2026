@@ -63,12 +63,12 @@ function About() {
                 tracking-tighter
               "
             >
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Eaque
-              quasi, sed sunt vel commodi labore molestiae facere, libero quam
-              optio perspiciatis unde possimus reprehenderit magni esse harum
-              corporis laudantium incidunt totam accusamus eius. Sint, magni
-              labore quas illum laborum reprehenderit! Explicabo molestias minima
-              exercitationem laboriosam quas, impedit inventore tenetur nobis!
+              For a decade, Gantavya has been the ultimate arena where innovation meets ambition. 
+              Born from the vision of Grobots Club at SRMCEM Lucknow, this flagship technical fest has 
+              grown into a movement — uniting thousands of engineers, creators, and 
+              dreamers who dare to build tomorrow. 
+              This year, Gantavya celebrates ten years of pushing limits, breaking barriers, 
+              and transforming ideas into reality.
             </p>
           </div>
         </div>

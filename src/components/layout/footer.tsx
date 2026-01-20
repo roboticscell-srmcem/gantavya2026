@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Facebook, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Instagram, Linkedin, Mail } from 'lucide-react';
 
 function Footer() {
   const [hoveredNav, setHoveredNav] = useState<number | null>(null);
@@ -22,10 +22,9 @@ function Footer() {
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: 'https://www.facebook.com/srmcemrobotics', label: 'Facebook' },
-    { icon: Instagram, href: 'https://www.instagram.com/srmcem_robotics/', label: 'Instagram' },
-    { icon: Linkedin, href: 'https://www.linkedin.com/company/srmcem-robotics/', label: 'LinkedIn' },
-    { icon: Twitter, href: 'https://twitter.com/srmcem_robotics', label: 'Twitter' },
+    { icon: Instagram, href: 'https://www.instagram.com/gantavya.fest/', label: 'Instagram' },
+    { icon: Linkedin, href: 'https://www.linkedin.com/company/grobots-club/', label: 'LinkedIn' },
+    { icon: Mail, href: 'mailto:grobotsclub@gmail.com', label: 'Email' },
   ];
 
   return (

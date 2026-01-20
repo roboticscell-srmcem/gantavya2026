@@ -47,6 +47,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'TRON';
+  src: url('/font/TRON.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -284,4 +292,41 @@
   font-family: 'Barbra', sans-serif;
   font-weight: 700;
   font-style: normal;
+}
+
+/* TRON font */
+.font-tron {
+  font-family: 'TRON', monospace;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Mobile Performance Optimizations */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  .bar {
+    will-change: height;
+    contain: layout style paint;
+  }
+  
+  /* Optimize scroll-triggered animations */
+  [data-scroll-trigger] {
+    will-change: transform, opacity;
+  }
+  
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* GPU acceleration hints for animated elements */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }

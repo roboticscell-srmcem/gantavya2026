@@ -1,20 +1,43 @@
-import React from 'react'
+import React, { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import Hero from '@/components/layout/hero'
 import About from '@/components/blocks/about'
-import Gallery from '@/components/blocks/gallery'
-import Sponsors from '@/components/blocks/sponsors'
-import Events from '@/components/blocks/events'
-import FAQ from '@/components/blocks/faq'
+
+// Lazy load heavy components below the fold
+const Gallery = dynamic(() => import('@/components/blocks/gallery'), {
+  loading: () => <div className="h-96 bg-neutral-900 animate-pulse" />,
+  ssr: true
+})
+const Events = dynamic(() => import('@/components/blocks/events'), {
+  loading: () => <div className="h-96 bg-neutral-900 animate-pulse" />,
+  ssr: true
+})
+const Sponsors = dynamic(() => import('@/components/blocks/sponsors'), {
+  loading: () => <div className="h-64 bg-neutral-900 animate-pulse" />,
+  ssr: true
+})
+const FAQ = dynamic(() => import('@/components/blocks/faq'), {
+  loading: () => <div className="h-64 bg-neutral-900 animate-pulse" />,
+  ssr: true
+})
 
 function Page() {
   return (
     <div>
       <Hero/>
       <About/>
-      <Gallery/>
-      <Events/>
-      <Sponsors/>
-      <FAQ/>
+      <Suspense fallback={<div className="h-96 bg-neutral-900 animate-pulse" />}>
+        <Gallery/>
+      </Suspense>
+      <Suspense fallback={<div className="h-96 bg-neutral-900 animate-pulse" />}>
+        <Events/>
+      </Suspense>
+      <Suspense fallback={<div className="h-64 bg-neutral-900 animate-pulse" />}>
+        <Sponsors/>
+      </Suspense>
+      <Suspense fallback={<div className="h-64 bg-neutral-900 animate-pulse" />}>
+        <FAQ/>
+      </Suspense>
     </div>
   )
 }

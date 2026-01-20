@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Plus, Edit, Trash2, Eye, X, CalendarIcon, Upload, FileText, ImageIcon } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, X, CalendarIcon, Upload, FileText, ImageIcon, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import ReactMarkdown from 'react-markdown'
 
@@ -297,9 +298,17 @@ export default function AdminEventsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Events</h1>
-          <p className="text-neutral-400">Manage your events</p>
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/admin" 
+            className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Events</h1>
+            <p className="text-neutral-400">Manage your events</p>
+          </div>
         </div>
         <Button onClick={openCreateModal} className="bg-orange-600 hover:bg-orange-700">
           <Plus className="w-4 h-4 mr-2" />
