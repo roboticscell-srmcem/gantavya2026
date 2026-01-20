@@ -62,16 +62,17 @@ export function RegistrationForm({
   // Parse participation fee (remove ₹ and any non-numeric chars except decimal)
   const baseFee = parseFloat(participationFee.replace(/[^0-9.]/g, '')) || 0;
   
-  // Platform fee and tax
-  const platformFeeRate = 0.02; // 2%
-  const taxRate = 0.18; // 18% GST
+  // Razorpay fee calculation:
+  // - Razorpay charges 2% commission
+  // - 18% GST on that commission (0.18 × 2% = 0.36%)
+  // - Total gateway fee = 2% + 0.36% = 2.36%
+  const razorpayFeeRate = 0.0236; // ~2.36%
 
   // Calculate totals
   const calculateTotals = () => {
-    const platformFee = baseFee * platformFeeRate;
-    const tax = (baseFee + platformFee) * taxRate;
-    const final = baseFee + platformFee + tax;
-    return { baseFee, platformFee, tax, final };
+    const gatewayFee = baseFee * razorpayFeeRate;
+    const final = baseFee + gatewayFee;
+    return { baseFee, gatewayFee, final };
   };
 
   // Validation for step 1
@@ -615,21 +616,20 @@ export function RegistrationForm({
                         return (
                           <>
                             <div className="flex justify-between text-neutral-300">
-                              <span>Base Total:</span>
+                              <span>Registration Fee:</span>
                               <span>₹{totals.baseFee.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-neutral-300">
-                              <span>Platform Fee (2%):</span>
-                              <span>₹{totals.platformFee.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between text-neutral-300">
-                              <span>GST (18%):</span>
-                              <span>₹{totals.tax.toFixed(2)}</span>
+                              <span>Payment Gateway Fee (~2.36%)*:</span>
+                              <span>₹{totals.gatewayFee.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-white font-semibold text-base pt-2 border-t border-neutral-700">
                               <span>Total Payable:</span>
                               <span>₹{totals.final.toFixed(2)}</span>
                             </div>
+                            <p className="text-xs text-neutral-500 pt-2">
+                              *Razorpay charges 2% + 18% GST on commission
+                            </p>
                           </>
                         );
                       })()}

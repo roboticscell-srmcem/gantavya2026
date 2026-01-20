@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import Razorpay from 'razorpay'
 import { z } from 'zod'
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
     const { team_id } = validation.data
 
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // 1. Fetch team details
     const { data: team, error: teamError } = await supabase

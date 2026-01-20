@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
 // Validation schemas
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     const { event_id, team_name, college_name, captain, members = [] } = validation.data
 
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // 1. Check if event exists and registration is open
     const { data: event, error: eventError } = await supabase
