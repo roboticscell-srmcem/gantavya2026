@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     // 1. Check if event exists and registration is open
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, min_team_size, max_team_size, registration_open, prize_amount')
+      .select('id, min_team_size, max_team_size, registration_open, entry_fee')
       .eq('id', event_id)
       .eq('visibility', 'public')
       .single()
@@ -87,9 +87,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // 4. Calculate total amount (for now, just use prize_amount / 10 as registration fee)
-    // TODO: Add proper pricing logic
-    const registrationFee = 500 // ₹500 per team as base fee
+    // 4. Calculate total amount from event's entry_fee
+    const registrationFee = event.entry_fee || 0
 
     // 5. Insert team
     const { data: team, error: teamError } = await supabase
