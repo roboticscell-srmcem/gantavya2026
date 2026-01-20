@@ -98,18 +98,9 @@ function Footer() {
 
       {/* Bottom Section - Large Text */}
       <div className='relative z-10 flex-1 flex items-center justify-center py-8 sm:py-12 md:py-14 px-4'>
-        <h2 
-          className='text-[18vw] sm:text-[15vw] md:text-[17vw] lg:text-[19vw] mx-2 font-bold tracking-tighter leading-none font-tron text-center'
-          style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            textShadow: '0 0 80px rgba(255,255,255,0.1)'
-          }}
-        >
+        <h1 className="text-[10vw] sm:text-[9vw] md:text-[9vw] lg:text-[8vw] xl:text-[10vw] font-bold text-white tracking-tighter leading-none font-tron">
           GANTAVYA
-        </h2>
+        </h1>
       </div>
     </footer>
   );
