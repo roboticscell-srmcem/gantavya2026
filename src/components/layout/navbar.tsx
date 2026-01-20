@@ -92,12 +92,18 @@ const Navbar = () => {
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 800);
-    } else if (link === 'About Us') {
-      scrollToSection('about');
     } else if (link === 'Past Events') {
       scrollToSection('gallery');
     } else if (link === 'Sponsors') {
       scrollToSection('sponsors');
+    }
+  };
+
+  const handleExternalLink = (url: string) => {
+    toggleMenu();
+    setTimeout(() => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }, 800);
     }
   };
 
@@ -142,7 +148,7 @@ const Navbar = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10">
               {/* Main Links */}
               <div className="flex flex-col gap-3 sm:gap-4">
-                {['Home', 'About Us', 'Past Events', 'Sponsors'].map((link) => (
+                {['Home', 'Past Events', 'Sponsors'].map((link) => (
                   <div key={link} className="menu-link-item overflow-hidden">
                     <p 
                       onClick={() => handleNavClick(link)}
@@ -152,18 +158,35 @@ const Navbar = () => {
                     </p>
                   </div>
                 ))}
+                {/* External Links */}
+                <div className="menu-link-item overflow-hidden">
+                  <p 
+                    onClick={() => handleExternalLink('https://learn.roboticsclubsrmcem.in')}
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter hover:text-[var(--color-primary)] cursor-pointer transition-all duration-300"
+                  >
+                    Learn
+                  </p>
+                </div>
+                <div className="menu-link-item overflow-hidden">
+                  <p 
+                    onClick={() => handleExternalLink('https://www.roboticsclubsrmcem.in')}
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter hover:text-[var(--color-primary)] cursor-pointer transition-all duration-300"
+                  >
+                    About Us
+                  </p>
+                </div>
               </div>
               {/* Secondary Links/Tags */}
               <div className="flex flex-col gap-2 pt-6 md:pt-12 text-[var(--color-text-tertiary)] uppercase text-xs tracking-widest">
                 <p className="mb-4 text-[var(--color-text-secondary)]/50">Follow Us</p>
                 <div className="menu-link-item overflow-hidden">
-                  <a href="https://www.instagram.com/srmcem_robotics/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Instagram</a>
+                  <a href="https://www.instagram.com/gantavya.fest/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Instagram</a>
                 </div>
                 <div className="menu-link-item overflow-hidden">
-                  <a href="https://twitter.com/srmcem_robotics" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Twitter</a>
+                  <a href="https://www.linkedin.com/company/grobots-club/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">LinkedIn</a>
                 </div>
                 <div className="menu-link-item overflow-hidden">
-                  <a href="https://www.linkedin.com/company/srmcem-robotics/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">LinkedIn</a>
+                  <a href="mailto:grobotsclub@gmail.com" className="hover:text-[var(--color-primary-cyan)] cursor-pointer transition-colors duration-300 block">Email</a>
                 </div>
               </div>
             </div>
