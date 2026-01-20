@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Mail, Phone, User, Calendar, MapPin } from 'lucide-react'
+import { ArrowLeft, Mail, Phone, User, Save, Check, X, Edit2, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface TeamMember {
   id: string
@@ -23,8 +25,8 @@ interface TeamDetails {
   total_amount_payable: number
   has_paid: boolean
   payment_status: string
-  payment_mode: string
-  payment_order_id: string
+  payment_gateway: string
+  razorpay_payment_id: string
   created_at: string
   events: {
     name: string
@@ -40,10 +42,34 @@ export default function TeamDetailsPage() {
   const [team, setTeam] = useState<TeamDetails | null>(null)
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    team_name: '',
+    college_name: '',
+    has_paid: false,
+    payment_gateway: '',
+    total_amount_payable: 0,
+  })
 
   useEffect(() => {
     fetchTeamDetails()
   }, [params.id])
+
+  useEffect(() => {
+    if (team) {
+      setEditForm({
+        team_name: team.team_name,
+        college_name: team.college_name,
+        has_paid: team.has_paid,
+        payment_gateway: team.payment_gateway || 'cash',
+        total_amount_payable: team.total_amount_payable,
+      })
+    }
+  }, [team])
 
   async function fetchTeamDetails() {
     try {
@@ -57,6 +83,70 @@ export default function TeamDetailsPage() {
       console.error('Error fetching team details:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    setSaveMessage(null)
+    
+    try {
+      const response = await fetch(`/api/admin/teams/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team_name: editForm.team_name,
+          college_name: editForm.college_name,
+          has_paid: editForm.has_paid,
+          payment_gateway: editForm.payment_gateway,
+          payment_status: editForm.has_paid ? 'captured' : 'created',
+          total_amount_payable: editForm.total_amount_payable,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTeam(prev => prev ? { ...prev, ...data.team } : null)
+        setEditing(false)
+        setSaveMessage({ type: 'success', text: 'Team updated successfully!' })
+        setTimeout(() => setSaveMessage(null), 3000)
+      } else {
+        const error = await response.json()
+        setSaveMessage({ type: 'error', text: error.error || 'Failed to update team' })
+      }
+    } catch (error) {
+      console.error('Error updating team:', error)
+      setSaveMessage({ type: 'error', text: 'Failed to update team' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function markAsPaid() {
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/admin/teams/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          has_paid: true,
+          payment_status: 'captured',
+          payment_gateway: 'cash',
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setTeam(prev => prev ? { ...prev, ...data.team } : null)
+        setEditForm(prev => ({ ...prev, has_paid: true, payment_gateway: 'cash' }))
+        setSaveMessage({ type: 'success', text: 'Payment marked as complete!' })
+        setTimeout(() => setSaveMessage(null), 3000)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      setSaveMessage({ type: 'error', text: 'Failed to update payment status' })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -78,20 +168,157 @@ export default function TeamDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          onClick={() => router.back()}
-          className="border-neutral-800"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-white">{team.team_name}</h1>
-          <p className="text-neutral-400">{team.events.name}</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="border-neutral-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">{team.team_name}</h1>
+            <p className="text-neutral-400">{team.events?.name || 'No event'}</p>
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          {!team.has_paid && (
+            <Button
+              onClick={markAsPaid}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Mark as Paid
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setEditing(!editing)}
+            className="border-neutral-800"
+          >
+            <Edit2 className="w-4 h-4 mr-2" />
+            {editing ? 'Cancel' : 'Edit'}
+          </Button>
         </div>
       </div>
+
+      {/* Save Message */}
+      {saveMessage && (
+        <div className={`p-4 rounded-lg flex items-center gap-2 ${
+          saveMessage.type === 'success' 
+            ? 'bg-green-500/10 border border-green-500/20 text-green-500'
+            : 'bg-red-500/10 border border-red-500/20 text-red-500'
+        }`}>
+          {saveMessage.type === 'success' ? <Check className="w-5 h-5" /> : <X className="w-5 h-5" />}
+          {saveMessage.text}
+        </div>
+      )}
+
+      {/* Edit Form */}
+      {editing && (
+        <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-orange-500">Edit Team Details</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="team_name" className="text-white">Team Name</Label>
+              <Input
+                id="team_name"
+                value={editForm.team_name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, team_name: e.target.value }))}
+                className="bg-neutral-900 border-neutral-700"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="college_name" className="text-white">College Name</Label>
+              <Input
+                id="college_name"
+                value={editForm.college_name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, college_name: e.target.value }))}
+                className="bg-neutral-900 border-neutral-700"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-white">Amount (₹)</Label>
+              <Input
+                id="amount"
+                type="number"
+                value={editForm.total_amount_payable}
+                onChange={(e) => setEditForm(prev => ({ ...prev, total_amount_payable: Number(e.target.value) }))}
+                className="bg-neutral-900 border-neutral-700"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="payment_gateway" className="text-white">Payment Mode</Label>
+              <select
+                id="payment_gateway"
+                value={editForm.payment_gateway}
+                onChange={(e) => setEditForm(prev => ({ ...prev, payment_gateway: e.target.value }))}
+                className="w-full h-10 px-3 rounded-md bg-neutral-900 border border-neutral-700 text-white"
+              >
+                <option value="cash">Cash</option>
+                <option value="razorpay">Online (Razorpay)</option>
+                <option value="upi">UPI</option>
+                <option value="bank_transfer">Bank Transfer</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="has_paid"
+              checked={editForm.has_paid}
+              onChange={(e) => setEditForm(prev => ({ ...prev, has_paid: e.target.checked }))}
+              className="w-4 h-4 rounded border-neutral-700 bg-neutral-900 text-orange-500 focus:ring-orange-500"
+            />
+            <Label htmlFor="has_paid" className="text-white cursor-pointer">
+              Payment Completed
+            </Label>
+          </div>
+          
+          <div className="flex gap-2 pt-2">
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {saving ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save Changes
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditing(false)
+                if (team) {
+                  setEditForm({
+                    team_name: team.team_name,
+                    college_name: team.college_name,
+                    has_paid: team.has_paid,
+                    payment_gateway: team.payment_gateway || 'cash',
+                    total_amount_payable: team.total_amount_payable,
+                  })
+                }
+              }}
+              className="border-neutral-800"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Team Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -142,16 +369,16 @@ export default function TeamDetailsPage() {
                 {team.has_paid ? 'Paid' : 'Pending'}
               </span>
             </div>
-            {team.payment_mode && (
+            {team.payment_gateway && (
               <div>
                 <p className="text-xs text-neutral-400 mb-1">Payment Mode</p>
-                <p className="text-white uppercase">{team.payment_mode}</p>
+                <p className="text-white capitalize">{team.payment_gateway}</p>
               </div>
             )}
-            {team.payment_order_id && (
+            {team.razorpay_payment_id && (
               <div>
-                <p className="text-xs text-neutral-400 mb-1">Order ID</p>
-                <p className="text-xs text-white font-mono">{team.payment_order_id}</p>
+                <p className="text-xs text-neutral-400 mb-1">Payment ID</p>
+                <p className="text-xs text-white font-mono">{team.razorpay_payment_id}</p>
               </div>
             )}
           </div>

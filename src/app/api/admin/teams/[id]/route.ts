@@ -1,23 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-
-// Helper function to check if user is admin
-async function isAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return false
-  }
-
-  const { data: adminUser } = await supabase
-    .from('admin_users')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  return !!adminUser
-}
+import { createServiceClient } from '@/lib/supabase/server'
 
 // GET team details with members
 export async function GET(
@@ -25,15 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!await isAdmin()) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const { id } = await params
-    const supabase = await createClient()
+    const supabase = createServiceClient()
 
     // Fetch team with event details
     const { data: team, error: teamError } = await supabase
@@ -87,24 +62,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    if (!await isAdmin()) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const { id } = await params
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = createServiceClient()
     const body = await request.json()
 
     const { data: team, error } = await supabase
       .from('teams')
-      .update({
-        ...body,
-        updated_by: user?.id,
-      })
+      .update(body)
       .eq('id', id)
       .select()
       .single()

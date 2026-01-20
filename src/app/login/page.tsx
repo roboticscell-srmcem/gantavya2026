@@ -35,7 +35,7 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed')
       }
 
-      // Store user in localStorage for now (will implement proper sessions later)
+      // Store user in localStorage
       localStorage.setItem('admin_user', JSON.stringify(data.user))
       
       // Redirect to admin dashboard

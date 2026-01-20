@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Mono, Inter, Bricolage_Grotesque, Poppins } from "next/font/google";
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
-import Preloader from "@/components/layout/preloader";
+import LayoutWrapper from "@/components/layout/layout-wrapper";
 import RazorpayScript from "@/components/razorpay-script";
 import "./globals.css";
 
@@ -50,10 +48,9 @@ export default function RootLayout({
       <body
         className={`${spaceMono.variable} ${inter.variable} ${bricolage.variable} ${poppins.variable} font-poppins antialiased overflow-x-hidden`}
       >
-        <Preloader />
-        <Navbar/>
-        {children}
-        <Footer/>
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
         <RazorpayScript />
       </body>
     </html>

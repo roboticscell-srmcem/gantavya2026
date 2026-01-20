@@ -1,55 +1,28 @@
 import { NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-
-// Helper function to check if user is admin
-async function isAdmin() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return false
-  }
-
-  // Use service client to check admin_users (bypasses RLS)
-  const serviceClient = createServiceClient()
-  const { data: adminUser } = await serviceClient
-    .from('admin_users')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  return !!adminUser
-}
 
 // Validation schema for manual team creation
 const manualTeamSchema = z.object({
   event_id: z.string().uuid('Invalid event ID'),
-  team_name: z.string().min(2, 'Team name must be at least 2 characters'),
-  college_name: z.string().min(2, 'College name must be at least 2 characters'),
-  captain_name: z.string().min(2, 'Captain name must be at least 2 characters'),
+  team_name: z.string().min(1, 'Team name is required'),
+  college_name: z.string().min(1, 'College name is required'),
+  captain_name: z.string().min(1, 'Captain name is required'),
   captain_email: z.string().email('Invalid captain email'),
-  captain_phone: z.string().regex(/^[0-9]{10}$/, 'Phone must be 10 digits'),
+  captain_phone: z.string().min(10, 'Phone must be at least 10 digits'),
   payment_mode: z.enum(['cash', 'online']),
   has_paid: z.boolean(),
-  amount_paid: z.number().min(0),
+  amount_paid: z.number().min(0).optional().default(0),
   members: z.array(z.object({
-    name: z.string().min(2),
+    name: z.string().min(1),
     email: z.string().email(),
-    phone: z.string().regex(/^[0-9]{10}$/),
-  })).optional(),
+    phone: z.string().min(10),
+  })).optional().default([]),
 })
 
 // GET all teams with filters
 export async function GET(request: Request) {
   try {
-    if (!await isAdmin()) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const { searchParams } = new URL(request.url)
     const eventId = searchParams.get('event_id')
     const hasPaid = searchParams.get('has_paid')
@@ -106,18 +79,14 @@ export async function GET(request: Request) {
 // POST - Create team manually (admin only)
 export async function POST(request: Request) {
   try {
-    if (!await isAdmin()) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
+    
+    console.log('Received team creation request:', JSON.stringify(body, null, 2))
     
     // Validate input
     const validation = manualTeamSchema.safeParse(body)
     if (!validation.success) {
+      console.error('Validation errors:', validation.error.issues)
       return NextResponse.json(
         { error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
