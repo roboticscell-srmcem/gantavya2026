@@ -1,67 +1,84 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
-    // Note: Auth is handled by admin layout using localStorage
-    // This API is only accessible from admin pages which are protected
-    
-    const supabase = await createClient()
+    // Use service client to bypass RLS for admin operations
+    const supabase = createServiceClient()
 
-    // Fetch event KPIs from view
-    const { data: eventKpis, error: kpisError } = await supabase
-      .from('event_kpis')
-      .select('*')
+    // Fetch all teams with events
+    const { data: teams, error: teamsError } = await supabase
+      .from('teams')
+      .select(`
+        id,
+        has_paid,
+        total_amount_payable,
+        payment_gateway,
+        event_id,
+        events (
+          id,
+          name
+        )
+      `)
 
-    if (kpisError) {
-      console.error('Error fetching event KPIs:', kpisError)
+    if (teamsError) {
+      console.error('Error fetching teams:', teamsError)
       return NextResponse.json(
         { error: 'Failed to fetch KPIs' },
         { status: 500 }
       )
     }
 
-    // Fetch global stats
-    const { data: globalStats, error: statsError } = await supabase
-      .rpc('get_global_stats')
-      .single()
+    // Fetch team members count
+    const { data: members, error: membersError } = await supabase
+      .from('team_members')
+      .select('team_id')
 
-    // If RPC doesn't exist yet, calculate manually
-    let global = {
-      total_events: 0,
-      total_teams: 0,
-      total_participants: 0,
-      total_revenue: 0,
-      paid_teams: 0,
-    }
+    // Fetch all events
+    const { data: events, error: eventsError } = await supabase
+      .from('events')
+      .select('id, name')
 
-    if (!statsError && globalStats) {
-      global = globalStats as typeof global
-    } else {
-      // Fallback: calculate from event_kpis
-      global = {
-        total_events: eventKpis?.length || 0,
-        total_teams: eventKpis?.reduce((sum, e) => sum + (e.total_teams || 0), 0) || 0,
-        total_participants: eventKpis?.reduce((sum, e) => sum + (e.total_participants || 0), 0) || 0,
-        total_revenue: eventKpis?.reduce((sum, e) => sum + (e.total_collection || 0), 0) || 0,
-        paid_teams: eventKpis?.reduce((sum, e) => sum + (e.paid_teams || 0), 0) || 0,
+    // Calculate event KPIs
+    const eventKpis = (events || []).map(event => {
+      const eventTeams = (teams || []).filter(t => t.event_id === event.id)
+      const paidTeams = eventTeams.filter(t => t.has_paid)
+      const totalCollection = paidTeams.reduce((sum, t) => sum + (Number(t.total_amount_payable) || 0), 0)
+      const eventMembers = (members || []).filter(m => 
+        eventTeams.some(t => t.id === m.team_id)
+      )
+      
+      return {
+        event_id: event.id,
+        event_name: event.name,
+        total_teams: eventTeams.length,
+        paid_teams: paidTeams.length,
+        total_participants: eventMembers.length,
+        total_collection: totalCollection,
       }
+    })
+
+    // Calculate global stats
+    const paidTeams = (teams || []).filter(t => t.has_paid)
+    const totalRevenue = paidTeams.reduce((sum, t) => sum + (Number(t.total_amount_payable) || 0), 0)
+    
+    const global = {
+      total_events: events?.length || 0,
+      total_teams: teams?.length || 0,
+      total_participants: members?.length || 0,
+      total_revenue: totalRevenue,
+      paid_teams: paidTeams.length,
     }
 
     // Payment mode distribution
-    const { data: paymentModes, error: modesError } = await supabase
-      .from('teams')
-      .select('payment_mode')
-      .eq('has_paid', true)
-
-    const paymentDistribution = paymentModes?.reduce((acc: any, team) => {
-      const mode = team.payment_mode || 'unknown'
+    const paymentDistribution = paidTeams.reduce((acc: Record<string, number>, team) => {
+      const mode = team.payment_gateway || 'unknown'
       acc[mode] = (acc[mode] || 0) + 1
       return acc
-    }, {}) || {}
+    }, {})
 
     return NextResponse.json({
-      event_kpis: eventKpis || [],
+      event_kpis: eventKpis,
       global_stats: global,
       payment_distribution: paymentDistribution,
     })
