@@ -8,5 +8,5 @@
 export const BRAND_CONFIG = {
   name: 'Gantavya 2026',
   website: 'https://gantavya.roboticsclubsrmcem.in',
-  supportEmail: 'grobotsclub@gmail.com',
+  supportEmail: 'no-reply@gantavya.roboticsclubsrmcem.in',
 };
