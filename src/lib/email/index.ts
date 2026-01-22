@@ -56,7 +56,6 @@ export async function sendEmail(options: {
       content: typeof att.content === 'string' 
         ? Buffer.from(att.content, 'base64') 
         : att.content,
-      contentType: att.contentType || 'image/png',
     }));
 
     const { data, error } = await resend.emails.send({
@@ -65,7 +64,7 @@ export async function sendEmail(options: {
       subject,
       replyTo: BRAND_CONFIG.supportEmail,
       html,
-      attachments: resendAttachments,
+      ...(resendAttachments && resendAttachments.length > 0 && { attachments: resendAttachments }),
     });
 
     if (error) {
