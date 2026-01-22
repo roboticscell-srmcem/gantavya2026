@@ -41,22 +41,40 @@ export async function sendEmail(options: {
 }): Promise<EmailResponse> {
   const { to, subject, html, attachments } = options;
 
+  console.log('📧 [Email Service] Starting email send process');
+  console.log('📧 [Email Service] Recipients:', to);
+  console.log('📧 [Email Service] Subject:', subject);
+  console.log('📧 [Email Service] Attachments:', attachments?.length || 0);
+
   if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not configured. Email not sent.');
+    console.error('❌ [Email Service] RESEND_API_KEY not configured. Email not sent.');
     return { success: false, error: 'Email service not configured' };
   }
 
-  const fromAddress = process.env.EMAIL_FROM_ADDRESS || `noreply@${process.env.RESEND_DOMAIN || 'resend.dev'}`;
+  const fromAddress = process.env.EMAIL_FROM_ADDRESS;
   const fromName = process.env.EMAIL_FROM_NAME || BRAND_CONFIG.name;
+
+  console.log('📧 [Email Service] From:', `${fromName} <${fromAddress}>`);
+  console.log('📧 [Email Service] Reply-To:', BRAND_CONFIG.supportEmail);
 
   try {
     // Prepare attachments for Resend SDK format
-    const resendAttachments = attachments?.map(att => ({
-      filename: att.filename,
-      content: typeof att.content === 'string' 
-        ? Buffer.from(att.content, 'base64') 
-        : att.content,
-    }));
+    const resendAttachments = attachments?.map((att, index) => {
+      const isBase64 = typeof att.content === 'string';
+      const buffer = isBase64 ? Buffer.from(att.content, 'base64') : att.content;
+      console.log(`📎 [Email Service] Attachment ${index + 1}:`, {
+        filename: att.filename,
+        size: buffer.length,
+        sizeKB: Math.round(buffer.length / 1024),
+        type: isBase64 ? 'base64' : 'buffer'
+      });
+      return {
+        filename: att.filename,
+        content: buffer,
+      };
+    });
+
+    console.log('📧 [Email Service] Calling Resend API...');
 
     const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromAddress}>`,
@@ -68,14 +86,16 @@ export async function sendEmail(options: {
     });
 
     if (error) {
-      console.error('Failed to send email:', error);
+      console.error('❌ [Email Service] Resend API error:', JSON.stringify(error, null, 2));
       return { success: false, error: error.message || 'Failed to send email' };
     }
 
-    console.log('Email sent successfully:', data?.id);
+    console.log('✅ [Email Service] Email sent successfully!');
+    console.log('✅ [Email Service] Message ID:', data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('❌ [Email Service] Unexpected error:', error);
+    console.error('❌ [Email Service] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 

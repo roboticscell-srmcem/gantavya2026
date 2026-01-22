@@ -228,8 +228,8 @@ export async function generateEventPass(data: PassData): Promise<Buffer> {
     // Continue without barcode if it fails
   }
   
-  // Return as PNG buffer
-  return canvas.toBuffer('image/png');
+  // Return as JPEG buffer (smaller file size)
+  return canvas.toBuffer('image/jpeg', { quality: 0.85 });
 }
 
 /**
