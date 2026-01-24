@@ -119,29 +119,84 @@ export async function PATCH(
         const eventName = currentTeam.events?.title || currentTeam.events?.name || 'Gantavya Event'
         const teamId = currentTeam.team_code || currentTeam.id.slice(0, 8).toUpperCase()
 
-        // Get member count
-        const { count: memberCount } = await supabase
+        // Get all team members (captain first, then members)
+        const { data: members } = await supabase
           .from('team_members')
-          .select('*', { count: 'exact', head: true })
+          .select('member_name, member_email, member_contact, role')
           .eq('team_id', currentTeam.id)
+          .order('role', { ascending: false }) // captain comes first
 
-        // Generate the event pass with full team data for barcode
-        let passBase64: string | null = null
-        try {
-          passBase64 = await generateEventPassBase64({
-            teamId: teamId,
-            teamName: currentTeam.team_name,
-            eventName: eventName,
-            collegeName: currentTeam.college_name || 'N/A',
-            captainName: currentTeam.captain_name,
-            captainEmail: currentTeam.captain_email,
-            captainPhone: currentTeam.captain_phone,
-            paymentStatus: 'PAID',
-          })
-        } catch (passError) {
-          console.error('Error generating event pass:', passError)
-          // Continue without the pass if generation fails
+        const memberCount = members?.length || 1
+        const memberNames = members?.map(m => m.member_name) || [currentTeam.captain_name]
+
+        // Generate event passes for ALL team members
+        const attachments: Array<{
+          filename: string;
+          content: string;
+          contentType: string;
+        }> = []
+
+        if (members && members.length > 0) {
+          // Generate a pass for each team member
+          for (let i = 0; i < members.length; i++) {
+            const member = members[i]
+            try {
+              const passBase64 = await generateEventPassBase64({
+                teamId: teamId,
+                teamName: currentTeam.team_name,
+                eventName: eventName,
+                collegeName: currentTeam.college_name || 'N/A',
+                captainName: member.member_name, // Use member's name for their pass
+                captainEmail: member.member_email,
+                captainPhone: member.member_contact,
+                paymentStatus: 'PAID',
+              })
+
+              if (passBase64) {
+                // Create a safe filename for the member
+                const safeMemberName = member.member_name
+                  .replace(/[^a-zA-Z0-9]/g, '-')
+                  .replace(/-+/g, '-')
+                  .slice(0, 20)
+                
+                attachments.push({
+                  filename: `Gantavya-Pass-${safeMemberName}-${teamId}.jpg`,
+                  content: passBase64,
+                  contentType: 'image/jpeg',
+                })
+              }
+            } catch (passError) {
+              console.error(`Error generating pass for member ${member.member_name}:`, passError)
+              // Continue with other members if one fails
+            }
+          }
+        } else {
+          // Fallback: generate just captain's pass if no members found
+          try {
+            const passBase64 = await generateEventPassBase64({
+              teamId: teamId,
+              teamName: currentTeam.team_name,
+              eventName: eventName,
+              collegeName: currentTeam.college_name || 'N/A',
+              captainName: currentTeam.captain_name,
+              captainEmail: currentTeam.captain_email,
+              captainPhone: currentTeam.captain_phone,
+              paymentStatus: 'PAID',
+            })
+
+            if (passBase64) {
+              attachments.push({
+                filename: `Gantavya-Pass-${teamId}.jpg`,
+                content: passBase64,
+                contentType: 'image/jpeg',
+              })
+            }
+          } catch (passError) {
+            console.error('Error generating event pass:', passError)
+          }
         }
+
+        console.log(`Generated ${attachments.length} passes for team ${teamId}`)
         
         const emailHtml = getRegistrationConfirmationEmail({
           teamName: currentTeam.team_name,
@@ -149,28 +204,22 @@ export async function PATCH(
           eventName: eventName,
           teamId: teamId,
           collegeName: currentTeam.college_name,
-          memberCount: memberCount || undefined,
+          memberCount: memberCount,
           transactionId: currentTeam.transaction_id,
+          memberNames: memberNames,
         })
-
-        // Prepare attachments
-        const attachments = passBase64 ? [
-          {
-            filename: `Gantavya-Pass-${teamId}.jpg`,
-            content: passBase64,
-            contentType: 'image/jpeg',
-          }
-        ] : undefined
 
         const emailResult = await sendEmail({
           to: currentTeam.captain_email,
           subject: `🎉 Payment Verified - ${eventName} | Gantavya 2026`,
           html: emailHtml,
-          attachments,
+          attachments: attachments.length > 0 ? attachments : undefined,
         })
 
         if (!emailResult.success) {
           console.error(`Failed to send email to ${currentTeam.captain_email}:`, emailResult.error)
+        } else {
+          console.log(`Confirmation email with ${attachments.length} passes sent to ${currentTeam.captain_email}`)
         }
       } catch (emailError) {
         console.error('Error sending confirmation email:', emailError)

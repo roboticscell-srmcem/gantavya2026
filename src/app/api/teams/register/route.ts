@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { sendEmail, getRegistrationReceivedEmail } from '@/lib/email'
 
 // Validation schemas
 const memberSchema = z.object({
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     // 1. Check if event exists and registration is open
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, min_team_size, max_team_size, registration_open, entry_fee')
+      .select('id, name, min_team_size, max_team_size, registration_open, entry_fee')
       .eq('id', event_id)
       .eq('visibility', 'public')
       .single()
@@ -200,7 +201,41 @@ export async function POST(request: Request) {
     }
 
     // === END TRANSACTION-LIKE OPERATIONS ===
-    // Registration complete - email will be sent after payment verification by admin
+
+    // 9. Send registration received email (payment pending verification)
+    if (payment) {
+      try {
+        const teamId = team.team_code || team.id.slice(0, 8).toUpperCase()
+        const totalMembers = 1 + members.length // captain + members
+
+        const emailHtml = getRegistrationReceivedEmail({
+          teamName: team_name,
+          captainName: captain.name,
+          eventName: event.name || 'Gantavya Event',
+          teamId: teamId,
+          collegeName: college_name,
+          memberCount: totalMembers,
+          transactionId: payment.transaction_id,
+          totalAmount: registrationFee,
+        })
+
+        const emailResult = await sendEmail({
+          to: captain.email,
+          subject: `⏳ Registration Received - ${event.name || 'Gantavya Event'} | Gantavya 2026`,
+          html: emailHtml,
+        })
+
+        if (!emailResult.success) {
+          console.error(`Failed to send registration received email to ${captain.email}:`, emailResult.error)
+          // Don't fail registration if email fails - team is already created
+        } else {
+          console.log(`Registration received email sent to ${captain.email}`)
+        }
+      } catch (emailError) {
+        console.error('Error sending registration received email:', emailError)
+        // Don't fail the registration if email fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
