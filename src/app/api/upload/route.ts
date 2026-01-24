@@ -99,8 +99,7 @@ export async function POST(request: Request) {
       resourceType: resourceType,
       fileExtension: fileExtension
     })
-  } catch (error) {
-    console.error('Upload error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Failed to upload file' },
       { status: 500 }

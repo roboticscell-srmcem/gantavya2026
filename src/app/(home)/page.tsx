@@ -2,6 +2,7 @@ import React, { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Hero from '@/components/layout/hero'
 import About from '@/components/blocks/about'
+import { BackgroundBlobs } from '@/components/ui/background-blobs'
 
 // Lazy load heavy components below the fold
 const Gallery = dynamic(() => import('@/components/blocks/gallery'), {
@@ -19,7 +20,8 @@ const Sponsors = dynamic(() => import('@/components/blocks/sponsors'), {
 
 function Page() {
   return (
-    <div>
+    <div className="relative">
+      <BackgroundBlobs />
       <Hero/>
       <About/>
       <Suspense fallback={<div className="h-96 bg-neutral-900 animate-pulse" />}>

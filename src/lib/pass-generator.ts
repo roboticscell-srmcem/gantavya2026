@@ -1,13 +1,14 @@
 /**
- * Event Pass Generator
+ * Event Pass Generator - Enhanced Visibility Version
  * 
  * Generates personalized event passes with:
  * - Team details overlaid on template
- * - Dynamic barcode with Team ID
+ * - Dynamic QR code with all team and player data
+ * - Enhanced text visibility and contrast
  */
 
 import { createCanvas, loadImage, registerFont } from 'canvas';
-import bwipjs from 'bwip-js';
+import QRCode from 'qrcode';
 import path from 'path';
 import fs from 'fs';
 
@@ -17,150 +18,129 @@ function ensureFontsRegistered() {
   if (fontsRegistered) return;
   
   try {
-    // Use bundled Inter font from public/font directory
-    const interFontPath = path.join(process.cwd(), 'public', 'font', 'Inter.ttf');
+    // Register static Inter fonts for better compatibility
+    const interRegularPath = path.join(process.cwd(), 'public', 'font', 'Inter-Regular.ttf');
+    const interBoldPath = path.join(process.cwd(), 'public', 'font', 'Inter-Bold.ttf');
     
-    if (fs.existsSync(interFontPath)) {
-      // Register Inter as both normal and bold (variable font supports both)
-      registerFont(interFontPath, { family: 'Inter', weight: 'normal' });
-      registerFont(interFontPath, { family: 'Inter', weight: 'bold' });
-      console.log('Registered Inter font from:', interFontPath);
-    } else {
-      console.warn('Inter font not found at:', interFontPath);
-      
-      // Fallback to system fonts
-      const systemFonts = [
-        '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-        'C:\\Windows\\Fonts\\arial.ttf',
-      ];
-      
-      for (const fontPath of systemFonts) {
-        if (fs.existsSync(fontPath)) {
-          registerFont(fontPath, { family: 'Inter', weight: 'normal' });
-          registerFont(fontPath, { family: 'Inter', weight: 'bold' });
-          console.log('Registered fallback font from:', fontPath);
-          break;
-        }
-      }
+    if (fs.existsSync(interRegularPath)) {
+      registerFont(interRegularPath, { family: 'Inter', weight: 'normal' });
+    }
+    if (fs.existsSync(interBoldPath)) {
+      registerFont(interBoldPath, { family: 'Inter', weight: 'bold' });
+    }
+    
+    // Fallback to Arial if Inter not available
+    if (!fs.existsSync(interRegularPath) && !fs.existsSync(interBoldPath)) {
+      // Arial is system font, no registration needed
     }
     
     fontsRegistered = true;
-  } catch (error) {
-    console.warn('Could not register fonts:', error);
+  } catch {
+    // Silent fail for font registration
   }
 }
 
 // Template dimensions
-const TEMPLATE_WIDTH = 2000;
-const TEMPLATE_HEIGHT = 647;
+const TEMPLATE_WIDTH = 591;
+const TEMPLATE_HEIGHT = 1004;
 
-// Text positions (adjusted based on feedback)
+// Enhanced text positions - CENTER ALIGNED for better accessibility
 const TEXT_POSITIONS = {
-  // "ID [TEAM_ID]" - center area (keep as is)
+  // Team ID - center aligned, highly visible
   teamIdCenter: {
-    x: 950,
-    y: 260,
-    fontSize: 42,
+    x: TEMPLATE_WIDTH / 2,  // Perfect center (295.5)
+    y: 740,  // Moved up slightly
+    fontSize: 48,  // Slightly smaller to fit more text
     fontWeight: 'bold',
-    color: '#E8E4DD',
+    color: '#FFFFFF',
+    align: 'center' as CanvasTextAlign,
   },
-  // "TEAM NAME : [VALUE]" (right 7rem = 112px more from current)
+  // Participant Name - center aligned
+  participantName: {
+    x: TEMPLATE_WIDTH / 2,
+    y: 800,  // Moved up
+    fontSize: 32,  // Slightly smaller
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    align: 'center' as CanvasTextAlign,
+  },
+  // Team Name - center aligned
   teamName: {
-    x: 850,  // was 729, +112 right (7rem)
-    y: 490,
-    fontSize: 26,
-    fontWeight: 'normal',
-    color: '#E8E4DD',
-  },
-  // "EVENT NAME : [VALUE]" (right 7rem = 112px more)
-  eventName: {
-    x: 850,  // was 729, +112 right (7rem)
-    y: 530,
-    fontSize: 26,
-    fontWeight: 'normal',
-    color: '#E8E4DD',
-  },
-  // "College Name : [VALUE]" (right 7rem = 112px more)
-  collegeName: {
-    x: 850,  // was 729, +112 right (7rem)
-    y: 570,
-    fontSize: 26,
-    fontWeight: 'normal',
-    color: '#E8E4DD',
-  },
-  // Vertical "TEAM ID" on right side - positioned to not overlap barcode
-  teamIdVertical: {
-    x: 1790,  // moved left to avoid barcode overlap
-    y: 600,
-    fontSize: 28,
+    x: TEMPLATE_WIDTH / 2,
+    y: 850,  // New position
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#E8E4DD',
-    rotation: -90,
+    color: '#FFFFFF',
+    align: 'center' as CanvasTextAlign,
+  },
+  // Event Name - center aligned
+  eventName: {
+    x: TEMPLATE_WIDTH / 2,
+    y: 900,  // Adjusted
+    fontSize: 28,
+    fontWeight: 'normal',
+    color: '#FFFFFF',
+    align: 'center' as CanvasTextAlign,
+  },
+  // College Name - center aligned, prominent
+  collegeName: {
+    x: TEMPLATE_WIDTH / 2,
+    y: 950,  // Adjusted
+    fontSize: 26,  // Smaller to fit
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    align: 'center' as CanvasTextAlign,
   },
 };
 
-// Barcode position (7rem left, 1.5x height increase, 4rem margin from right)
-const BARCODE_POSITION = {
-  x: 1880,   // 4rem (64px) from right edge (2000 - 64 - barcode_width/2)
-  y: 323,
-  width: 600,
-  height: 100,  // 1.5x increase (150 * 1.5 = 225)
-  rotation: -90,
+// QR code position
+const QR_POSITION = {
+  x: 295,
+  y: 383,
+  width: 200,
+  height: 200,
 };
 
 export interface PassData {
-  teamId: string;        // e.g., "GT-2026-4496"
-  teamName: string;      // e.g., "RoboWarriors"
-  eventName: string;     // e.g., "Robo Race"
-  collegeName: string;   // e.g., "XYZ Engineering College"
-  captainName?: string;  // e.g., "John Doe"
-  captainEmail?: string; // e.g., "john@example.com"
-  captainPhone?: string; // e.g., "9876543210"
-  paymentStatus?: string; // e.g., "PAID"
+  teamId: string;
+  teamName: string;
+  eventName: string;
+  collegeName: string;
+  participantName: string;
+  participantEmail?: string;
+  participantPhone?: string;
+  paymentStatus?: string;
 }
 
 /**
- * Create a compact barcode string with team data
- * Format: ID|Team|Captain|Email|Phone|Event|Status
- * Max ~80 chars for Code128 readability
+ * Create a QR code data string with essential data only (for compact QR)
  */
-function createBarcodeData(data: PassData): string {
-  const parts = [
-    data.teamId,
-    (data.teamName || '').slice(0, 15),      // Limit team name
-    (data.captainName || '').slice(0, 12),   // Limit captain name
-    (data.captainEmail || '').slice(0, 20),  // Limit email
-    (data.captainPhone || '').slice(0, 10),  // Phone number
-    (data.eventName || '').slice(0, 10),     // Limit event name
-    data.paymentStatus || 'PAID',
-  ];
-  return parts.join('|');
+function createQRData(data: PassData): string {
+  // Include comprehensive data for detailed QR codes
+  return JSON.stringify({
+    teamId: data.teamId,
+    name: data.participantName,
+    teamName: data.teamName,
+    eventName: data.eventName,
+    collegeName: data.collegeName,
+    participantEmail: data.participantEmail,
+    participantPhone: data.participantPhone,
+    paymentStatus: data.paymentStatus,
+  });
 }
 
 /**
- * Generate a barcode image buffer
+ * Generate a QR code image buffer
  */
-async function generateBarcode(text: string): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    bwipjs.toBuffer(
-      {
-        bcid: 'code128',       // Barcode type
-        text: text,            // Text to encode
-        scale: 3,              // 3x scaling factor
-        height: 10,            // Bar height in mm
-        includetext: false,    // Don't include text below barcode
-        textxalign: 'center',  // Center text
-        backgroundcolor: 'ffffff',  // Pure white background
-        barcolor: '000000',         // Pure black bars for scannability
-      },
-      (err: Error | string, png: Buffer) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(png);
-        }
-      }
-    );
+async function generateQR(text: string): Promise<Buffer> {
+  return QRCode.toBuffer(text, {
+    width: 200,
+    margin: 1,
+    errorCorrectionLevel: 'L',  // Low error correction for smaller QR
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF'
+    }
   });
 }
 
@@ -168,10 +148,8 @@ async function generateBarcode(text: string): Promise<Buffer> {
  * Generate event pass with team details
  */
 export async function generateEventPass(data: PassData): Promise<Buffer> {
-  // Ensure fonts are registered before creating canvas
   ensureFontsRegistered();
   
-  // Load the template image
   const templatePath = path.join(process.cwd(), 'public', 'images', 'pass-template.png');
   
   if (!fs.existsSync(templatePath)) {
@@ -180,18 +158,17 @@ export async function generateEventPass(data: PassData): Promise<Buffer> {
 
   const template = await loadImage(templatePath);
   
-  // Create canvas with template dimensions
   const canvas = createCanvas(TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
   const ctx = canvas.getContext('2d');
   
   // Draw the template
   ctx.drawImage(template, 0, 0, TEMPLATE_WIDTH, TEMPLATE_HEIGHT);
   
-  // Set up text rendering
+  // Set up text rendering with better quality
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
+  ctx.imageSmoothingEnabled = true;
   
-  // Helper function to draw text
+  // Enhanced helper function to draw text with stroke and shadow
   const drawText = (
     text: string,
     x: number,
@@ -199,103 +176,119 @@ export async function generateEventPass(data: PassData): Promise<Buffer> {
     fontSize: number,
     color: string,
     fontWeight: string = 'normal',
-    rotation?: number
+    align: CanvasTextAlign = 'center'
   ) => {
     ctx.save();
-    ctx.fillStyle = color;
-    // Use Inter font (bundled with the project)
-    ctx.font = `${fontWeight} ${fontSize}px Inter`;
     
-    if (rotation) {
-      ctx.translate(x, y);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.fillText(text, 0, 0);
-    } else {
-      ctx.fillText(text, x, y);
-    }
+    // Set text alignment
+    ctx.textAlign = align;
+    
+    // Use Arial font with better rendering (system font)
+    ctx.font = `${fontWeight} ${fontSize}px Arial`;
+    
+    // Add stronger dark background for better contrast
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    
+    // Draw thick dark stroke for maximum visibility
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 6;
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeText(text, x, y);
+    
+    // Add secondary lighter stroke for glow effect
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.lineWidth = 8;
+    ctx.strokeText(text, x, y);
+    
+    // Reset shadow for fill
+    ctx.shadowColor = 'transparent';
+    
+    // Draw the main text in bright white
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
     
     ctx.restore();
   };
   
-  // Draw Team ID (center) - just the ID value, "ID" is already in template
+  // Draw Team ID - CENTER ALIGNED
   drawText(
     data.teamId,
     TEXT_POSITIONS.teamIdCenter.x,
     TEXT_POSITIONS.teamIdCenter.y,
     TEXT_POSITIONS.teamIdCenter.fontSize,
     TEXT_POSITIONS.teamIdCenter.color,
-    TEXT_POSITIONS.teamIdCenter.fontWeight
+    TEXT_POSITIONS.teamIdCenter.fontWeight,
+    TEXT_POSITIONS.teamIdCenter.align
   );
   
-  // Draw Team Name - just the value
+  // Draw Participant Name - CENTER ALIGNED
+  drawText(
+    data.participantName,
+    TEXT_POSITIONS.participantName.x,
+    TEXT_POSITIONS.participantName.y,
+    TEXT_POSITIONS.participantName.fontSize,
+    TEXT_POSITIONS.participantName.color,
+    TEXT_POSITIONS.participantName.fontWeight,
+    TEXT_POSITIONS.participantName.align
+  );
+  
+  // Draw Team Name - CENTER ALIGNED
   drawText(
     data.teamName,
     TEXT_POSITIONS.teamName.x,
     TEXT_POSITIONS.teamName.y,
     TEXT_POSITIONS.teamName.fontSize,
     TEXT_POSITIONS.teamName.color,
-    TEXT_POSITIONS.teamName.fontWeight
+    TEXT_POSITIONS.teamName.fontWeight,
+    TEXT_POSITIONS.teamName.align
   );
   
-  // Draw Event Name - just the value
+  // Draw Event Name - CENTER ALIGNED
   drawText(
     data.eventName,
     TEXT_POSITIONS.eventName.x,
     TEXT_POSITIONS.eventName.y,
     TEXT_POSITIONS.eventName.fontSize,
     TEXT_POSITIONS.eventName.color,
-    TEXT_POSITIONS.eventName.fontWeight
+    TEXT_POSITIONS.eventName.fontWeight,
+    TEXT_POSITIONS.eventName.align
   );
   
-  // Draw College Name - just the value
+  // Draw College Name - CENTER ALIGNED
   drawText(
     data.collegeName,
     TEXT_POSITIONS.collegeName.x,
     TEXT_POSITIONS.collegeName.y,
     TEXT_POSITIONS.collegeName.fontSize,
     TEXT_POSITIONS.collegeName.color,
-    TEXT_POSITIONS.collegeName.fontWeight
+    TEXT_POSITIONS.collegeName.fontWeight,
+    TEXT_POSITIONS.collegeName.align
   );
   
-  // Draw Team ID (vertical on right side) - just the ID value
-  drawText(
-    data.teamId,
-    TEXT_POSITIONS.teamIdVertical.x,
-    TEXT_POSITIONS.teamIdVertical.y,
-    TEXT_POSITIONS.teamIdVertical.fontSize,
-    TEXT_POSITIONS.teamIdVertical.color,
-    TEXT_POSITIONS.teamIdVertical.fontWeight,
-    TEXT_POSITIONS.teamIdVertical.rotation
-  );
-  
-  // Generate and draw barcode with full team data
+  // Generate and draw QR code
   try {
-    const barcodeData = createBarcodeData(data);
-    const barcodeBuffer = await generateBarcode(barcodeData);
-    const barcodeImage = await loadImage(barcodeBuffer);
+    const qrData = createQRData(data);
+    const qrBuffer = await generateQR(qrData);
+    const qrImage = await loadImage(qrBuffer);
     
-    // Draw rotated barcode
-    ctx.save();
-    ctx.translate(BARCODE_POSITION.x, BARCODE_POSITION.y);
-    ctx.rotate((BARCODE_POSITION.rotation * Math.PI) / 180);
-    
-    // Draw barcode (it will be rotated)
+    // Draw QR code with enhanced contrast
     ctx.drawImage(
-      barcodeImage,
-      -BARCODE_POSITION.width / 2,
-      -BARCODE_POSITION.height / 2,
-      BARCODE_POSITION.width,
-      BARCODE_POSITION.height
+      qrImage,
+      QR_POSITION.x - QR_POSITION.width / 2,
+      QR_POSITION.y - QR_POSITION.height / 2,
+      QR_POSITION.width,
+      QR_POSITION.height
     );
-    
-    ctx.restore();
-  } catch (error) {
-    console.error('Error generating barcode:', error);
-    // Continue without barcode if it fails
+  } catch {
+    // QR code generation failed - continue without QR
   }
   
-  // Return as JPEG buffer (smaller file size)
-  return canvas.toBuffer('image/jpeg', { quality: 0.85 });
+  // Return as JPEG with optimized quality (smaller file size for email)
+  return canvas.toBuffer('image/jpeg', { quality: 0.75 });
 }
 
 /**

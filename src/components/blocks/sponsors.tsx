@@ -3,13 +3,12 @@ import React from "react";
 function Sponsors() {
   return (
     <div id="sponsors" className="relative w-full min-h-[60vh] md:min-h-[70vh] pb-16 md:pb-26">
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10"></div>
-
-      <div className="relative z-20 mx-4 sm:mx-6 md:mx-8 lg:mx-16 mb-8 sm:mb-10 md:mb-12">
-        <div className="flex items-center justify-start gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <span className="bg-neutral-300 h-1 w-8 sm:w-12"></span>
-          <span className="text-white text-base sm:text-lg md:text-xl tracking-tight">Sponsorships</span>
-        </div>
+      <div className="mx-4 sm:mx-6 md:mx-8 h-20 w-auto max-w-xs text-xl sm:text-2xl flex items-center justify-center gap-2 pt-20 sm:pt-28 md:pt-34">
+        <span className="bg-neutral-300 h-1 w-8 sm:w-12"></span>
+        <span className="text-white flex items-center justify-center whitespace-nowrap">
+          Sponsorships
+        </span>
+      </div>
 
         <div className="max-w-4xl">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">

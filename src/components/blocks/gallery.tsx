@@ -74,11 +74,7 @@ function Gallery() {
   ];
 
   return (
-    <section id="gallery" className="relative w-full md:min-h-screen bg-black py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
-      {/* Gradient overlays for smooth transitions */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-10"></div>
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10"></div>
-
+    <section id="gallery" className="relative w-full md:min-h-screen py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden">
       {/* Header Section */}
       <div className="relative z-20 mx-4 sm:mx-6 md:mx-8 lg:mx-16 mb-8 sm:mb-10 md:mb-12">
         <div className="flex items-center justify-start gap-4 sm:gap-6 mb-6 sm:mb-8">

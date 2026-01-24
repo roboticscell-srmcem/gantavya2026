@@ -78,6 +78,7 @@ CREATE TABLE teams (
     currency TEXT NOT NULL DEFAULT 'INR',
     
     has_paid BOOLEAN NOT NULL DEFAULT false,
+    passes_generated BOOLEAN NOT NULL DEFAULT false,
     
     payment_gateway TEXT NOT NULL DEFAULT 'razorpay',
     payment_order_id TEXT UNIQUE,
@@ -109,6 +110,8 @@ CREATE TABLE team_members (
     member_contact TEXT NOT NULL,
     
     role TEXT NOT NULL CHECK (role IN ('captain', 'member')),
+    
+    pass_url TEXT,  -- Cloudinary URL for member's unique pass
     
     is_active BOOLEAN NOT NULL DEFAULT true,
     joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

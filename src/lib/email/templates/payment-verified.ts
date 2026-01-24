@@ -14,10 +14,15 @@ export interface PaymentVerifiedData {
   memberCount?: number;
   transactionId?: string;
   memberNames?: string[];
+  passUrls?: string[];
+  participantName?: string; // For individual emails
 }
 
 export function getRegistrationConfirmationEmail(data: PaymentVerifiedData): string {
-  const { teamName, captainName, eventName, teamId, collegeName, memberCount, transactionId, memberNames } = data;
+  const { teamName, captainName, eventName, teamId, collegeName, memberCount, transactionId, memberNames, passUrls, participantName } = data;
+
+  // Use participantName if provided (for individual emails), otherwise captainName
+  const recipientName = participantName || captainName;
 
   // Build member list for passes
   const memberList = memberNames && memberNames.length > 0 
@@ -49,10 +54,10 @@ export function getRegistrationConfirmationEmail(data: PaymentVerifiedData): str
           <tr>
             <td style="padding: 24px 32px;">
               <p style="margin: 0 0 16px; font-size: 15px; color: #333; line-height: 1.5;">
-                Hi ${captainName}, your payment has been <span style="color: #16a34a; font-weight: 500;">verified</span>.
+                Hi ${recipientName}, your payment has been <span style="color: #16a34a; font-weight: 500;">verified</span>.
               </p>
               <p style="margin: 0 0 24px; font-size: 15px; color: #333; line-height: 1.5;">
-                Your team is now registered for <strong>${eventName}</strong>. Event passes for all team members are attached.
+                ${participantName ? 'Your event pass is ready!' : 'Your team is now registered for'} <strong>${eventName}</strong>${participantName ? '' : '. Event passes for all team members are ready'}.
               </p>
               
               <!-- Details Table -->
@@ -101,8 +106,15 @@ export function getRegistrationConfirmationEmail(data: PaymentVerifiedData): str
                 ` : ''}
               </table>
               
-              <!-- Passes Attached -->
-              ${memberList ? `
+              <!-- Passes Links -->
+              ${passUrls && passUrls.length > 0 ? `
+              <div style="margin-top: 24px; padding: 16px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                <p style="margin: 0 0 8px; font-size: 14px; font-weight: 500; color: #166534;">🎟️ ${passUrls.length === 1 ? 'Your Event Pass' : 'Event Passes'}:</p>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #15803d; line-height: 1.6;">
+                  ${passUrls.map((url, i) => `<li><a href="${url}" style="color: #15803d; text-decoration: underline;">${passUrls.length === 1 ? 'Download Your Pass' : `Pass ${i + 1}`}</a></li>`).join('')}
+                </ul>
+              </div>
+              ` : memberList ? `
               <div style="margin-top: 24px; padding: 16px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
                 <p style="margin: 0 0 8px; font-size: 14px; font-weight: 500; color: #166534;">🎟️ Passes attached for:</p>
                 <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #15803d; line-height: 1.6;">

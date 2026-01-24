@@ -75,7 +75,7 @@ function Footer() {
               target="_blank"
               className="underline underline-offset-2 hover:text-white/80 transition-colors"
             >
-              Spark
+              Pratyush Tiwari
             </Link>
           </p>
         </div>

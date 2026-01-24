@@ -19,7 +19,7 @@ interface KPIData {
 
 interface QuickActionCardProps {
   href: string
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   title: string
   description: string
 }

@@ -24,7 +24,6 @@ export async function POST(request: Request) {
     }
 
     const { username, password, accessCode } = validation.data
-    console.log('Login attempt for user:', username , password , accessCode);
     const supabase = createServiceClient()
 
     const { data: adminUser, error: userError } = await supabase
@@ -81,7 +80,6 @@ export async function POST(request: Request) {
     })
 
     if (authError) {
-      console.error('Auth sign-in error:', authError)
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 500 }
@@ -111,8 +109,7 @@ export async function POST(request: Request) {
 
     return response
 
-  } catch (error: any) {
-    console.error('Login error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -42,15 +42,14 @@ export async function GET(
       .order('role', { ascending: false }) // Captain first
 
     if (membersError) {
-      console.error('Error fetching members:', membersError)
+      // Members fetch failed
     }
 
     return NextResponse.json({
       team,
       members: members || []
     })
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -97,6 +96,11 @@ export async function PATCH(
       currentTeam.payment_status === 'pending_verification'
     )
 
+    // If payment is being verified, set passes_generated to false for later processing
+    if (wasUnpaid && isBeingVerified) {
+      body.passes_generated = false
+    }
+
     // Update the team
     const { data: team, error } = await supabase
       .from('teams')
@@ -106,133 +110,43 @@ export async function PATCH(
       .single()
 
     if (error) {
-      console.error('Error updating team:', error)
       return NextResponse.json(
         { error: 'Failed to update team', details: error.message },
         { status: 500 }
       )
     }
 
-    // Send confirmation email if payment was just verified
-    if (wasUnpaid && isBeingVerified && currentTeam) {
+    // Trigger pass generation immediately after payment verification
+    if (wasUnpaid && isBeingVerified) {
+      console.log(`💰 Payment verified for team ${team.id}. Triggering pass generation...`)
+      
+      // Call the generate-passes API internally
       try {
-        const eventName = currentTeam.events?.title || currentTeam.events?.name || 'Gantavya Event'
-        const teamId = currentTeam.team_code || currentTeam.id.slice(0, 8).toUpperCase()
-
-        // Get all team members (captain first, then members)
-        const { data: members } = await supabase
-          .from('team_members')
-          .select('member_name, member_email, member_contact, role')
-          .eq('team_id', currentTeam.id)
-          .order('role', { ascending: false }) // captain comes first
-
-        const memberCount = members?.length || 1
-        const memberNames = members?.map(m => m.member_name) || [currentTeam.captain_name]
-
-        // Generate event passes for ALL team members
-        const attachments: Array<{
-          filename: string;
-          content: string;
-          contentType: string;
-        }> = []
-
-        if (members && members.length > 0) {
-          // Generate a pass for each team member
-          for (let i = 0; i < members.length; i++) {
-            const member = members[i]
-            try {
-              const passBase64 = await generateEventPassBase64({
-                teamId: teamId,
-                teamName: currentTeam.team_name,
-                eventName: eventName,
-                collegeName: currentTeam.college_name || 'N/A',
-                captainName: member.member_name, // Use member's name for their pass
-                captainEmail: member.member_email,
-                captainPhone: member.member_contact,
-                paymentStatus: 'PAID',
-              })
-
-              if (passBase64) {
-                // Create a safe filename for the member
-                const safeMemberName = member.member_name
-                  .replace(/[^a-zA-Z0-9]/g, '-')
-                  .replace(/-+/g, '-')
-                  .slice(0, 20)
-                
-                attachments.push({
-                  filename: `Gantavya-Pass-${safeMemberName}-${teamId}.jpg`,
-                  content: passBase64,
-                  contentType: 'image/jpeg',
-                })
-              }
-            } catch (passError) {
-              console.error(`Error generating pass for member ${member.member_name}:`, passError)
-              // Continue with other members if one fails
-            }
-          }
-        } else {
-          // Fallback: generate just captain's pass if no members found
-          try {
-            const passBase64 = await generateEventPassBase64({
-              teamId: teamId,
-              teamName: currentTeam.team_name,
-              eventName: eventName,
-              collegeName: currentTeam.college_name || 'N/A',
-              captainName: currentTeam.captain_name,
-              captainEmail: currentTeam.captain_email,
-              captainPhone: currentTeam.captain_phone,
-              paymentStatus: 'PAID',
-            })
-
-            if (passBase64) {
-              attachments.push({
-                filename: `Gantavya-Pass-${teamId}.jpg`,
-                content: passBase64,
-                contentType: 'image/jpeg',
-              })
-            }
-          } catch (passError) {
-            console.error('Error generating event pass:', passError)
-          }
-        }
-
-        console.log(`Generated ${attachments.length} passes for team ${teamId}`)
+        const baseUrl = process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
         
-        const emailHtml = getRegistrationConfirmationEmail({
-          teamName: currentTeam.team_name,
-          captainName: currentTeam.captain_name,
-          eventName: eventName,
-          teamId: teamId,
-          collegeName: currentTeam.college_name,
-          memberCount: memberCount,
-          transactionId: currentTeam.transaction_id,
-          memberNames: memberNames,
+        const response = await fetch(`${baseUrl}/api/generate-passes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
         })
-
-        const emailResult = await sendEmail({
-          to: currentTeam.captain_email,
-          subject: `🎉 Payment Verified - ${eventName} | Gantavya 2026`,
-          html: emailHtml,
-          attachments: attachments.length > 0 ? attachments : undefined,
-        })
-
-        if (!emailResult.success) {
-          console.error(`Failed to send email to ${currentTeam.captain_email}:`, emailResult.error)
+        
+        if (response.ok) {
+          const result = await response.json()
+          console.log(`✅ Pass generation triggered successfully for team ${team.id}:`, result.message)
         } else {
-          console.log(`Confirmation email with ${attachments.length} passes sent to ${currentTeam.captain_email}`)
+          console.error(`❌ Failed to trigger pass generation for team ${team.id}:`, response.statusText)
         }
-      } catch (emailError) {
-        console.error('Error sending confirmation email:', emailError)
-        // Don't fail the request if email fails - team is already updated
+      } catch (error) {
+        console.error(`💥 Error triggering pass generation for team ${team.id}:`, error)
       }
     }
 
     return NextResponse.json({ 
       team,
-      emailSent: wasUnpaid && isBeingVerified
+      passesTriggered: wasUnpaid && isBeingVerified
     })
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { XIcon, CheckCircle2, AlertCircle, Plus, X, ArrowLeft, ArrowRight, Users, QrCode as QrCodeIcon, Copy, Check } from 'lucide-react';
+import SplashScreen from '@/components/layout/splash-screen';
 
 interface RegistrationFormProps {
   eventId: string;
@@ -39,6 +40,7 @@ export function RegistrationForm({
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -110,7 +112,7 @@ export function RegistrationForm({
       
       setQrCodeDataUrl(qrDataUrl);
     } catch (error) {
-      console.error('Error generating QR code:', error);
+      // Error generating QR code - silent fail
     } finally {
       setQrLoading(false);
     }
@@ -280,7 +282,7 @@ export function RegistrationForm({
           : 'Registration successful! You will receive a confirmation email shortly.'
       );
       
-      setTimeout(() => onClose(), 4000);
+      setShowSplash(true);
 
     } catch (error: any) {
       setSubmitStatus('error');
@@ -304,6 +306,18 @@ export function RegistrationForm({
   const handleTouchMove = (e: React.TouchEvent) => {
     e.stopPropagation();
   };
+
+  // Show splash screen on successful registration
+  if (showSplash) {
+    return (
+      <SplashScreen 
+        onClose={() => {
+          setShowSplash(false);
+          onClose();
+        }} 
+      />
+    );
+  }
 
   return (
     <div 
