@@ -65,7 +65,7 @@ export default function TeamDetailsPage() {
         team_name: team.team_name,
         college_name: team.college_name,
         has_paid: team.has_paid,
-        payment_gateway: team.payment_gateway || 'cash',
+        payment_gateway: team.payment_gateway || 'upi',
         total_amount_payable: team.total_amount_payable,
       })
     }
@@ -131,14 +131,14 @@ export default function TeamDetailsPage() {
         body: JSON.stringify({
           has_paid: true,
           payment_status: 'captured',
-          payment_gateway: 'cash',
+          payment_gateway: 'upi',
         }),
       })
 
       if (response.ok) {
         const data = await response.json()
         setTeam(prev => prev ? { ...prev, ...data.team } : null)
-        setEditForm(prev => ({ ...prev, has_paid: true, payment_gateway: 'cash' }))
+        setEditForm(prev => ({ ...prev, has_paid: true, payment_gateway: 'upi' }))
         setSaveMessage({ type: 'success', text: 'Payment marked as complete!' })
         setTimeout(() => setSaveMessage(null), 3000)
       }
@@ -307,7 +307,7 @@ export default function TeamDetailsPage() {
                     team_name: team.team_name,
                     college_name: team.college_name,
                     has_paid: team.has_paid,
-                    payment_gateway: team.payment_gateway || 'cash',
+                    payment_gateway: team.payment_gateway || 'upi',
                     total_amount_payable: team.total_amount_payable,
                   })
                 }

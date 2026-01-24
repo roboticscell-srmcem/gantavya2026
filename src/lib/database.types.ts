@@ -54,6 +54,7 @@ export interface Database {
           payment_status: 'created' | 'pending' | 'pending_verification' | 'completed' | 'failed' | 'refunded' | 'not_required'
           transaction_id: string | null
           account_holder_name: string | null
+          passes_generated: boolean
           is_active: boolean
           created_at: string
           updated_at: string

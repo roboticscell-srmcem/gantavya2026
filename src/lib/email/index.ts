@@ -57,7 +57,6 @@ export async function sendEmail(options: {
   const { to, subject, html, attachments } = options;
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not configured. Email not sent.');
     return { success: false, error: 'Email service not configured' };
   }
 
@@ -86,14 +85,11 @@ export async function sendEmail(options: {
     });
 
     if (error) {
-      console.error('Failed to send email:', error);
       return { success: false, error: error.message || 'Failed to send email' };
     }
 
-    console.log('Email sent successfully:', data?.id);
     return { success: true, messageId: data?.id };
   } catch (error) {
-    console.error('Error sending email:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 

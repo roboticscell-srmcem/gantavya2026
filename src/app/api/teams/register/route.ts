@@ -142,7 +142,6 @@ export async function POST(request: Request) {
       .single()
 
     if (teamError || !team) {
-      console.error('Error creating team:', teamError)
       return NextResponse.json(
         { error: 'Failed to create team registration' },
         { status: 500 }
@@ -164,7 +163,6 @@ export async function POST(request: Request) {
       })
 
     if (captainError) {
-      console.error('Error adding captain:', captainError)
       // Rollback: delete team
       await supabase.from('teams').delete().eq('id', team.id)
       createdTeamId = null
@@ -188,7 +186,6 @@ export async function POST(request: Request) {
         .insert(teamMembers)
 
       if (membersError) {
-        console.error('Error adding members:', membersError)
         // Rollback: delete team members and team
         await supabase.from('team_members').delete().eq('team_id', team.id)
         await supabase.from('teams').delete().eq('id', team.id)
@@ -226,13 +223,9 @@ export async function POST(request: Request) {
         })
 
         if (!emailResult.success) {
-          console.error(`Failed to send registration received email to ${captain.email}:`, emailResult.error)
           // Don't fail registration if email fails - team is already created
-        } else {
-          console.log(`Registration received email sent to ${captain.email}`)
         }
-      } catch (emailError) {
-        console.error('Error sending registration received email:', emailError)
+      } catch {
         // Don't fail the registration if email fails
       }
     }
@@ -247,16 +240,14 @@ export async function POST(request: Request) {
         : 'Team registered successfully!',
     }, { status: 201 })
 
-  } catch (error) {
-    console.error('Unexpected error:', error)
-    
+  } catch {
     // Attempt rollback if team was created
     if (createdTeamId) {
       try {
         await supabase.from('team_members').delete().eq('team_id', createdTeamId)
         await supabase.from('teams').delete().eq('id', createdTeamId)
-      } catch (rollbackError) {
-        console.error('Rollback failed:', rollbackError)
+      } catch {
+        // Rollback failed
       }
     }
     

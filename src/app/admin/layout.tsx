@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, LogOut, User, LayoutDashboard, Calendar, Users, CreditCard } from 'lucide-react'
+import { Menu, X, LogOut, User, LayoutDashboard, Calendar, Users, CreditCard, QrCode } from 'lucide-react'
 import Link from 'next/link'
 
 const navLinks = [
@@ -10,6 +10,7 @@ const navLinks = [
   { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Teams', href: '/admin/teams', icon: Users },
   { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+  { name: 'Scan', href: '/admin/scan', icon: QrCode },
 ]
 
 export default function AdminLayout({

@@ -61,14 +61,12 @@ export async function getAllEvents(): Promise<EventData[]> {
     });
     
     if (!response.ok) {
-      console.error('Failed to fetch events');
       return [];
     }
     
     const data = await response.json();
     return (data.events || []).map(transformEvent);
-  } catch (error) {
-    console.error('Error fetching events:', error);
+  } catch {
     return [];
   }
 }
@@ -85,8 +83,7 @@ export async function getEventBySlug(slug: string): Promise<EventData | null> {
     
     const data = await response.json();
     return data.event ? transformEvent(data.event) : null;
-  } catch (error) {
-    console.error('Error fetching event:', error);
+  } catch {
     return null;
   }
 }

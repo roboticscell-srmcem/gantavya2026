@@ -12,7 +12,6 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching events:', error)
       return NextResponse.json(
         { error: 'Failed to fetch events' },
         { status: 500 }
@@ -20,8 +19,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ events })
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -45,7 +43,6 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error('Error creating event:', error)
       return NextResponse.json(
         { error: 'Failed to create event', details: error.message },
         { status: 500 }
@@ -64,8 +61,7 @@ export async function POST(request: Request) {
         .insert(rulesData)
 
       if (rulesError) {
-        console.error('Error creating rules:', rulesError)
-        // Don't fail the whole request, just log it
+        // Don't fail the whole request, just skip rules
       }
     }
 

@@ -22,7 +22,6 @@ export async function GET() {
       `)
 
     if (teamsError) {
-      console.error('Error fetching teams:', teamsError)
       return NextResponse.json(
         { error: 'Failed to fetch KPIs' },
         { status: 500 }
@@ -82,8 +81,7 @@ export async function GET() {
       global_stats: global,
       payment_distribution: paymentDistribution,
     })
-  } catch (error) {
-    console.error('Unexpected error:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

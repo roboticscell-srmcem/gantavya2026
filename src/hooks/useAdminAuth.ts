@@ -61,7 +61,6 @@ export function useAdminAuth(): UseAdminAuthReturn {
 
       setUser(adminUser)
     } catch (err: any) {
-      console.error('Auth error:', err)
       setError(err.message || 'Authentication failed')
       router.push('/login')
     } finally {
@@ -78,8 +77,8 @@ export function useAdminAuth(): UseAdminAuthReturn {
       await supabase.auth.signOut()
       
       router.push('/login')
-    } catch (err) {
-      console.error('Sign out error:', err)
+    } catch {
+      // Sign out failed
     }
   }, [supabase, router])
 

@@ -40,7 +40,7 @@ function Grid() {
     };
 
     return (
-        <div id="events" className='w-full md:min-h-screen bg-black relative py-12 sm:py-16 md:py-20'>
+        <div id="events" className='w-full md:min-h-screen relative py-12 sm:py-16 md:py-20'>
             <div className='mt-6 sm:mt-8 h-16 sm:h-20 w-auto max-w-xs mx-4 sm:mx-0 text-lg sm:text-xl md:text-2xl flex items-center justify-start sm:justify-center gap-2 sm:gap-3'>
                 <span className='text-transparent bg-neutral-300 h-1 w-8 sm:w-12'>..........</span>
                 <span className='text-white flex items-center justify-center whitespace-nowrap'>What to expect</span>
