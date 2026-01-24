@@ -230,51 +230,40 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Schedule emails with 10-15 minute delay using job queue
-        const delayMinutes = Math.random() * 5 + 10 // Random delay between 10-15 minutes
-        const scheduledAt = new Date(Date.now() + delayMinutes * 60 * 1000)
-        console.log(`⏳ Scheduling emails to be sent at ${scheduledAt.toISOString()} (${delayMinutes.toFixed(1)} minutes from now)`)
+        // Send emails immediately (remove delay for Hobby plan compatibility)
+        console.log(`📧 Sending emails immediately for team ${team.team_name}`)
 
-        // Create email jobs for each pass
-        const jobInserts = []
+        // Send emails for each pass
         for (const pass of passUrls) {
-          const emailHtml = getRegistrationConfirmationEmail({
-            teamName: team.team_name,
-            captainName: team.captain_name,
-            eventName,
-            teamId,
-            collegeName: team.college_name,
-            memberCount,
-            transactionId: team.transaction_id,
-            memberNames: [...memberNames],
-            passUrls: [pass.url],
-            participantName: pass.name,
-          })
+          try {
+            const emailHtml = getRegistrationConfirmationEmail({
+              teamName: team.team_name,
+              captainName: team.captain_name,
+              eventName,
+              teamId,
+              collegeName: team.college_name,
+              memberCount,
+              transactionId: team.transaction_id,
+              memberNames: [...memberNames],
+              passUrls: [pass.url],
+              participantName: pass.name,
+            })
 
-          jobInserts.push({
-            job_type: 'send_pass_email',
-            status: 'pending',
-            priority: 1,
-            data: {
+            const emailResult = await sendEmail({
               to: pass.email,
               subject: `🎉 Your Event Pass Ready - ${eventName} | Gantavya 2026`,
               html: emailHtml,
-            },
-            scheduled_at: scheduledAt.toISOString(),
-          })
+            })
+
+            if (emailResult.success) {
+              console.log(`📬 Email sent successfully to ${pass.email}`)
+            } else {
+              console.error(`❌ Failed to send email to ${pass.email}`)
+            }
+          } catch (emailError) {
+            console.error(`Failed to send email to ${pass.email}:`, emailError)
+          }
         }
-
-        // Insert all jobs at once
-        const { error: jobError } = await supabase
-          .from('email_jobs')
-          .insert(jobInserts)
-
-        if (jobError) {
-          console.error('❌ Failed to create email jobs:', jobError)
-          throw new Error('Failed to schedule emails')
-        }
-
-        console.log(`📧 Created ${jobInserts.length} email jobs for team ${team.team_name}`)
 
         // Mark as processed immediately after generation
         await supabase
@@ -287,8 +276,7 @@ export async function POST(request: NextRequest) {
           teamId: team.id,
           teamName: team.team_name,
           passCount: passUrls.length,
-          emailsScheduled: true,
-          delayMinutes: delayMinutes.toFixed(1),
+          emailsSent: true,
         })
 
       } catch (teamError) {
@@ -296,10 +284,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🎉 Pass generation completed. Processed ${processedTeams.length} teams (emails scheduled with delay)`)
+    console.log(`🎉 Pass generation completed. Processed ${processedTeams.length} teams (emails sent immediately)`)
     
     return NextResponse.json({
-      message: `Processed ${processedTeams.length} teams - passes generated and emails scheduled`,
+      message: `Processed ${processedTeams.length} teams - passes generated and emails sent`,
       processedTeams,
     })
 
