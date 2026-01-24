@@ -46,12 +46,11 @@ function Grid() {
                 <span className='text-white flex items-center justify-center whitespace-nowrap'>What to expect</span>
             </div>
 
-                <div className="max-w-4xl">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
-                        <span className="text-neutral-500">What to expect </span>
-                        <span className="text-white">Gantavya 2026</span>
-                    </h2>
-                </div>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
+                    <span className="text-neutral-500">What to expect </span>
+                    <span className="text-white">Gantavya 2026</span>
+                </h2>
             </div>
 
             {loading ? (

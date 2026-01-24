@@ -10,12 +10,11 @@ function Sponsors() {
         </span>
       </div>
 
-        <div className="max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
-            <span className="text-neutral-500">Meet our </span>
-            <span className="text-white">Partners</span>
-          </h2>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
+          <span className="text-neutral-500">Meet our </span>
+          <span className="text-white">Partners</span>
+        </h2>
       </div>
 
       <div className="flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8">
