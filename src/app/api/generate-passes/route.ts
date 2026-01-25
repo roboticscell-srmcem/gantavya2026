@@ -76,108 +76,32 @@ export async function POST(request: NextRequest) {
         const eventName = team.events?.name || 'Gantavya Event'
         const teamId = team.team_code || team.id.slice(0, 8).toUpperCase()
 
-        // Get team members
+        // Get team members (includes captain and all members)
         const members = team.team_members || []
+        console.log(`👥 Team has ${members.length} members (including captain)`)
         const memberCount = members.length || 1
         const memberNames = members.map((m: any) => m.member_name) || [team.captain_name]
 
-        // Generate passes and upload to Cloudinary
+        // Generate passes and upload to Cloudinary for ALL members (including captain)
         const passUrls: { memberId: string; name: string; email: string; url: string }[] = []
 
-        if (members.length > 0) {
-          console.log(`👥 Processing ${members.length} team members`)
-          for (const member of members) {
-            console.log(`🎫 Generating pass for: ${member.member_name} (${member.member_email})`)
-            try {
-              // Define safe member name first
-              const safeMemberName = member.member_name
-                .replace(/[^a-zA-Z0-9]/g, '-')
-                .replace(/-+/g, '-')
-                .slice(0, 20)
-
-              const passBuffer = await generateEventPass({
-                teamId: teamId,
-                teamName: team.team_name,
-                eventName: eventName,
-                collegeName: team.college_name || 'N/A',
-                participantName: member.member_name,
-                participantEmail: member.member_email,
-                participantPhone: member.member_contact,
-                paymentStatus: 'PAID',
-              })
-
-              // Save locally in IDs folder
-              const idsFolder = path.join(process.cwd(), 'IDs')
-              if (!fs.existsSync(idsFolder)) {
-                fs.mkdirSync(idsFolder, { recursive: true })
-              }
-              const localFileName = `Gantavya-Pass-${safeMemberName}-${teamId}.jpg`
-              const localPath = path.join(idsFolder, localFileName)
-              fs.writeFileSync(localPath, passBuffer)
-              console.log(`💾 Saved pass locally: ${localPath}`)
-
-              // Upload to Cloudinary
-              console.log(`☁️ Uploading to Cloudinary: IDs/${safeMemberName}-${teamId}`)
-              let passUrl: string
-              const isCloudinaryConfigured = cloudinaryConfig.cloud_name && cloudinaryConfig.api_key && cloudinaryConfig.api_secret
-              console.log('🔍 Cloudinary configured:', isCloudinaryConfigured)
-              
-              if (!isCloudinaryConfigured) {
-                console.log('⚠️ Cloudinary not configured, using data URL')
-                passUrl = `data:image/jpeg;base64,${passBuffer.toString('base64')}`
-              } else {
-                const uploadResult = await new Promise((resolve, reject) => {
-                  const stream = cloudinary.uploader.upload_stream(
-                    {
-                      folder: 'IDs',
-                      public_id: `Gantavya-Pass-${safeMemberName}-${teamId}`,
-                      format: 'jpg',
-                      resource_type: 'image',
-                    },
-                    (error, result) => {
-                      if (error) reject(error)
-                      else resolve(result)
-                    }
-                  )
-                  stream.end(passBuffer)
-                })
-
-                passUrl = (uploadResult as any).secure_url
-                console.log(`✅ Uploaded to Cloudinary: ${passUrl}`)
-              }
-
-              passUrls.push({
-                memberId: member.id,
-                name: member.member_name,
-                email: member.member_email,
-                url: passUrl,
-              })
-
-              // Update team_member with pass_url (only if not data URL)
-              if (!passUrl.startsWith('data:')) {
-                await supabase
-                  .from('team_members')
-                  .update({ pass_url: passUrl })
-                  .eq('id', member.id)
-                console.log(`🗄️ Updated database for member: ${member.member_name}`)
-              }
-
-            } catch (passError) {
-              console.error(`Failed to generate pass for ${member.member_name}:`, passError)
-            }
-          }
-        } else {
-          console.log(`👤 Processing captain only: ${team.captain_name}`)
-          // Fallback for captain only
+        for (const member of members) {
+          console.log(`🎫 Generating pass for: ${member.member_name} (${member.member_email}) - Role: ${member.role}`)
           try {
+            // Define safe member name first
+            const safeMemberName = member.member_name
+              .replace(/[^a-zA-Z0-9]/g, '-')
+              .replace(/-+/g, '-')
+              .slice(0, 20)
+
             const passBuffer = await generateEventPass({
               teamId: teamId,
               teamName: team.team_name,
               eventName: eventName,
               collegeName: team.college_name || 'N/A',
-              participantName: team.captain_name,
-              participantEmail: team.captain_email,
-              participantPhone: team.captain_phone || '',
+              participantName: member.member_name,
+              participantEmail: member.member_email,
+              participantPhone: member.member_contact,
               paymentStatus: 'PAID',
             })
 
@@ -186,24 +110,26 @@ export async function POST(request: NextRequest) {
             if (!fs.existsSync(idsFolder)) {
               fs.mkdirSync(idsFolder, { recursive: true })
             }
-            const localFileName = `Gantavya-Pass-${teamId}.jpg`
+            const localFileName = `Gantavya-Pass-${safeMemberName}-${teamId}.jpg`
             const localPath = path.join(idsFolder, localFileName)
             fs.writeFileSync(localPath, passBuffer)
-            console.log(`💾 Saved captain pass locally: ${localPath}`)
+            console.log(`💾 Saved pass locally: ${localPath}`)
 
+            // Upload to Cloudinary
+            console.log(`☁️ Uploading to Cloudinary: IDs/${safeMemberName}-${teamId}`)
             let passUrl: string
-            const isCloudinaryConfiguredCaptain = cloudinaryConfig.cloud_name && cloudinaryConfig.api_key && cloudinaryConfig.api_secret
-            console.log('🔍 Cloudinary configured for captain:', isCloudinaryConfiguredCaptain)
+            const isCloudinaryConfigured = cloudinaryConfig.cloud_name && cloudinaryConfig.api_key && cloudinaryConfig.api_secret
+            console.log('🔍 Cloudinary configured:', isCloudinaryConfigured)
             
-            if (!isCloudinaryConfiguredCaptain) {
-              console.log('⚠️ Cloudinary not configured, using data URL for captain')
+            if (!isCloudinaryConfigured) {
+              console.log('⚠️ Cloudinary not configured, using data URL')
               passUrl = `data:image/jpeg;base64,${passBuffer.toString('base64')}`
             } else {
               const uploadResult = await new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
                   {
                     folder: 'IDs',
-                    public_id: `Gantavya-Pass-${teamId}`,
+                    public_id: `Gantavya-Pass-${safeMemberName}-${teamId}`,
                     format: 'jpg',
                     resource_type: 'image',
                   },
@@ -216,53 +142,56 @@ export async function POST(request: NextRequest) {
               })
 
               passUrl = (uploadResult as any).secure_url
-              console.log(`✅ Uploaded captain pass to Cloudinary: ${passUrl}`)
+              console.log(`✅ Uploaded to Cloudinary: ${passUrl}`)
             }
 
             passUrls.push({
-              memberId: team.captain_id || team.id,
-              name: team.captain_name,
-              email: team.captain_email,
+              memberId: member.id,
+              name: member.member_name,
+              email: member.member_email,
               url: passUrl,
             })
+
+            // Update team_member with pass_url (only if not data URL)
+            if (!passUrl.startsWith('data:')) {
+              await supabase
+                .from('team_members')
+                .update({ pass_url: passUrl })
+                .eq('id', member.id)
+              console.log(`🗄️ Updated database for member: ${member.member_name}`)
+            }
+
           } catch (passError) {
-            console.error(`Failed to generate captain pass for team ${teamId}:`, passError)
+            console.error(`Failed to generate pass for ${member.member_name}:`, passError)
           }
         }
 
-        // Send emails immediately (remove delay for Hobby plan compatibility)
-        console.log(`📧 Sending emails immediately for team ${team.team_name}`)
+        // Send email with all passes to the captain
+        console.log(`📧 Sending email with all passes to captain: ${team.captain_email}`)
 
-        // Send emails for each pass
-        for (const pass of passUrls) {
-          try {
-            const emailHtml = getRegistrationConfirmationEmail({
-              teamName: team.team_name,
-              captainName: team.captain_name,
-              eventName,
-              teamId,
-              collegeName: team.college_name,
-              memberCount,
-              transactionId: team.transaction_id,
-              memberNames: [...memberNames],
-              passUrls: [pass.url],
-              participantName: pass.name,
-            })
+        const emailHtml = getRegistrationConfirmationEmail({
+          teamName: team.team_name,
+          captainName: team.captain_name,
+          eventName,
+          teamId,
+          collegeName: team.college_name,
+          memberCount,
+          transactionId: team.transaction_id,
+          memberNames: [...memberNames],
+          passUrls: passUrls.map(p => ({ name: p.name, url: p.url })),
+          participantName: team.captain_name,
+        })
 
-            const emailResult = await sendEmail({
-              to: pass.email,
-              subject: `🎉 Your Event Pass Ready - ${eventName} | Gantavya 2026`,
-              html: emailHtml,
-            })
+        const emailResult = await sendEmail({
+          to: team.captain_email,
+          subject: `🎉 Event Passes Ready - ${eventName} | Gantavya 2026`,
+          html: emailHtml,
+        })
 
-            if (emailResult.success) {
-              console.log(`📬 Email sent successfully to ${pass.email}`)
-            } else {
-              console.error(`❌ Failed to send email to ${pass.email}`)
-            }
-          } catch (emailError) {
-            console.error(`Failed to send email to ${pass.email}:`, emailError)
-          }
+        if (emailResult.success) {
+          console.log(`📬 Email sent successfully to captain: ${team.captain_email}`)
+        } else {
+          console.error(`❌ Failed to send email to captain: ${team.captain_email}`)
         }
 
         // Mark as processed immediately after generation
@@ -276,7 +205,7 @@ export async function POST(request: NextRequest) {
           teamId: team.id,
           teamName: team.team_name,
           passCount: passUrls.length,
-          emailsSent: true,
+          emailSent: true,
         })
 
       } catch (teamError) {
@@ -284,7 +213,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🎉 Pass generation completed. Processed ${processedTeams.length} teams (emails sent immediately)`)
+    console.log(`🎉 Pass generation completed. Processed ${processedTeams.length} teams (emails sent to captains)`)
     
     return NextResponse.json({
       message: `Processed ${processedTeams.length} teams - passes generated and emails sent`,

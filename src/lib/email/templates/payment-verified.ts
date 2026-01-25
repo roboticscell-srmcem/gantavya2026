@@ -14,7 +14,7 @@ export interface PaymentVerifiedData {
   memberCount?: number;
   transactionId?: string;
   memberNames?: string[];
-  passUrls?: string[];
+  passUrls?: { name: string; url: string }[];
   participantName?: string; // For individual emails
 }
 
@@ -109,9 +109,9 @@ export function getRegistrationConfirmationEmail(data: PaymentVerifiedData): str
               <!-- Passes Links -->
               ${passUrls && passUrls.length > 0 ? `
               <div style="margin-top: 24px; padding: 16px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
-                <p style="margin: 0 0 8px; font-size: 14px; font-weight: 500; color: #166534;">🎟️ ${passUrls.length === 1 ? 'Your Event Pass' : 'Event Passes'}:</p>
+                <p style="margin: 0 0 8px; font-size: 14px; font-weight: 500; color: #166534;">🎟️ Event Passes:</p>
                 <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #15803d; line-height: 1.6;">
-                  ${passUrls.map((url, i) => `<li><a href="${url}" style="color: #15803d; text-decoration: underline;">${passUrls.length === 1 ? 'Download Your Pass' : `Pass ${i + 1}`}</a></li>`).join('')}
+                  ${passUrls.map((pass) => `<li><strong>${pass.name}'s Event Pass:</strong> <a href="${pass.url}" style="color: #15803d; text-decoration: underline;">Download</a></li>`).join('')}
                 </ul>
               </div>
               ` : memberList ? `
