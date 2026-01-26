@@ -129,6 +129,11 @@ export async function PATCH(
         const response = await fetch(`${baseUrl}/api/generate-passes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: process.env.ADMIN_USERNAME,
+            password: process.env.ADMIN_PASSWORD,
+            accessCode: process.env.ADMIN_ACCESS_CODE,
+          }),
         })
         
         if (response.ok) {
