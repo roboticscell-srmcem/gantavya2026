@@ -27,17 +27,6 @@ cloudinary.config(cloudinaryConfig)
 export async function POST(request: NextRequest) {
   console.log('🚀 Starting pass generation process')
   try {
-    const { username, password, accessCode } = await request.json()
-
-    // Validate credentials against env vars
-    if (
-      username !== process.env.ADMIN_USERNAME ||
-      password !== process.env.ADMIN_PASSWORD ||
-      accessCode !== process.env.ADMIN_ACCESS_CODE
-    ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const supabase = createServiceClient()
 
     // Get all teams that have paid but passes not yet generated

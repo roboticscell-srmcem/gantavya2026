@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, getRegistrationConfirmationEmail } from '@/lib/email'
 import { generateEventPassBase64 } from '@/lib/pass-generator'
+import { generatePassesForTeam } from '@/lib/pass-generation'
 
 // GET team details with members
 export async function GET(
@@ -120,30 +121,11 @@ export async function PATCH(
     if (wasUnpaid && isBeingVerified) {
       console.log(`💰 Payment verified for team ${team.id}. Triggering pass generation...`)
       
-      // Call the generate-passes API internally
       try {
-        const baseUrl = process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}` 
-          : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-        
-        const response = await fetch(`${baseUrl}/api/generate-passes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: process.env.ADMIN_USERNAME,
-            password: process.env.ADMIN_PASSWORD,
-            accessCode: process.env.ADMIN_ACCESS_CODE,
-          }),
-        })
-        
-        if (response.ok) {
-          const result = await response.json()
-          console.log(`✅ Pass generation triggered successfully for team ${team.id}:`, result.message)
-        } else {
-          console.error(`❌ Failed to trigger pass generation for team ${team.id}:`, response.statusText)
-        }
+        const result = await generatePassesForTeam(team.id)
+        console.log(`✅ Pass generation completed for team ${team.id}:`, result)
       } catch (error) {
-        console.error(`💥 Error triggering pass generation for team ${team.id}:`, error)
+        console.error(`❌ Failed to generate passes for team ${team.id}:`, error)
       }
     }
 
