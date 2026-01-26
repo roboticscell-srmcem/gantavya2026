@@ -17,27 +17,17 @@ let fontsRegistered = false;
 function ensureFontsRegistered() {
   if (fontsRegistered) return;
   
-  try {
-    // Register static Inter fonts for better compatibility
-    const interRegularPath = path.join(process.cwd(), 'public', 'font', 'Inter-Regular.ttf');
-    const interBoldPath = path.join(process.cwd(), 'public', 'font', 'Inter-Bold.ttf');
-    
-    if (fs.existsSync(interRegularPath)) {
-      registerFont(interRegularPath, { family: 'Inter', weight: 'normal' });
-    }
-    if (fs.existsSync(interBoldPath)) {
-      registerFont(interBoldPath, { family: 'Inter', weight: 'bold' });
-    }
-    
-    // Fallback to Arial if Inter not available
-    if (!fs.existsSync(interRegularPath) && !fs.existsSync(interBoldPath)) {
-      // Arial is system font, no registration needed
-    }
-    
-    fontsRegistered = true;
-  } catch {
-    // Silent fail for font registration
+  const fontDir = path.join(process.cwd(), 'public', 'fonts');
+  
+  const bitcountPath = path.join(fontDir, 'BitcountSingle-VariableFont_CRSV,ELSH,ELXP,slnt,wght.ttf');
+  
+  if (fs.existsSync(bitcountPath)) {
+    registerFont(bitcountPath, { family: 'BitcountSingle' });
+  } else {
+    console.warn('BitcountSingle font missing');
   }
+  
+  fontsRegistered = true;
 }
 
 // Template dimensions
@@ -183,8 +173,8 @@ export async function generateEventPass(data: PassData): Promise<Buffer> {
     // Set text alignment
     ctx.textAlign = align;
     
-    // Use Arial font with better rendering (system font)
-    ctx.font = `${fontWeight} ${fontSize}px Arial`;
+    // Use BitcountSingle font with fallback
+    ctx.font = `${fontWeight} ${fontSize}px "BitcountSingle", Inter, sans-serif`;
     
     // Add stronger dark background for better contrast
     ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';

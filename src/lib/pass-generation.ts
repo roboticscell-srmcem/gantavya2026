@@ -4,7 +4,6 @@ import { generateEventPass } from '@/lib/pass-generator'
 import { sendEmail } from '@/lib/email'
 import { getRegistrationConfirmationEmail } from '@/lib/email/templates/payment-verified'
 import { v2 as cloudinary } from 'cloudinary'
-import { registerFont } from 'canvas'
 import path from 'path'
 
 // Configure Cloudinary
@@ -36,13 +35,7 @@ export async function generatePassesForTeam(teamId: string) {
   console.log(`Generating passes for team: ${team.team_name}`)
   console.time('Total Pass Generation')
 
-  // Register Inter font to fix fontconfig error
-  try {
-    registerFont(path.join(process.cwd(), 'public', 'fonts', 'Inter-Regular.ttf'), { family: 'Inter', weight: '400', style: 'normal' })
-    console.log('✅ Inter font registered: public/fonts/Inter.ttf')
-  } catch (fontError) {
-    console.warn('⚠️ Failed to register Inter font:', fontError)
-  }
+  // Fonts are registered in pass-generator.ts
 
   // Generate and upload passes for each member in parallel
   const passPromises = team.team_members.map(async (member: any) => {
