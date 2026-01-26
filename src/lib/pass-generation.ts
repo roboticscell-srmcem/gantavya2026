@@ -4,8 +4,6 @@ import { generateEventPass } from '@/lib/pass-generator'
 import { sendEmail } from '@/lib/email'
 import { getRegistrationConfirmationEmail } from '@/lib/email/templates/payment-verified'
 import { v2 as cloudinary } from 'cloudinary'
-import fs from 'fs'
-import path from 'path'
 
 // Configure Cloudinary
 const cloudinaryConfig = {
@@ -34,11 +32,10 @@ export async function generatePassesForTeam(teamId: string) {
   }
 
   console.log(`Generating passes for team: ${team.team_name}`)
+  console.time('Total Pass Generation')
 
-  // Generate and upload passes for each member
-  const passUrls: { memberId: string; name: string; email: string; url: string }[] = []
-
-  for (const member of team.team_members) {
+  // Generate and upload passes for each member in parallel
+  const passPromises = team.team_members.map(async (member: any) => {
     console.log(`🎫 Generating pass for: ${member.member_name} (${member.member_email})`)
     try {
       const safeMemberName = member.member_name
@@ -56,15 +53,6 @@ export async function generatePassesForTeam(teamId: string) {
         participantPhone: member.member_contact,
         paymentStatus: 'PAID',
       })
-
-      // Save locally in IDs folder
-      const idsFolder = path.join(process.cwd(), 'IDs')
-      if (!fs.existsSync(idsFolder)) {
-        fs.mkdirSync(idsFolder, { recursive: true })
-      }
-      const localFileName = `Gantavya-Pass-${safeMemberName}-${teamId}.jpg`
-      const localPath = path.join(idsFolder, localFileName)
-      fs.writeFileSync(localPath, passBuffer)
 
       // Upload to Cloudinary
       console.log(`☁️ Uploading to Cloudinary: IDs/${safeMemberName}-${teamId}`)
@@ -95,13 +83,6 @@ export async function generatePassesForTeam(teamId: string) {
         console.log(`✅ Uploaded to Cloudinary: ${passUrl}`)
       }
 
-      passUrls.push({
-        memberId: member.id,
-        name: member.member_name,
-        email: member.member_email,
-        url: passUrl,
-      })
-
       // Update team_member with pass_url
       if (!passUrl.startsWith('data:')) {
         await supabase
@@ -110,10 +91,21 @@ export async function generatePassesForTeam(teamId: string) {
           .eq('id', member.id)
       }
 
+      return {
+        memberId: member.id,
+        name: member.member_name,
+        email: member.member_email,
+        url: passUrl,
+      }
     } catch (passError) {
       console.error(`Failed to generate pass for ${member.member_name}:`, passError)
+      return null // Or handle errors differently
     }
-  }
+  })
+
+  const passUrls = (await Promise.all(passPromises)).filter(Boolean) as { memberId: string; name: string; email: string; url: string }[]
+
+  console.timeEnd('Total Pass Generation')
 
   // Send email with all passes to the captain
   console.log(`📧 Sending email with all passes to captain: ${team.captain_email}`)
