@@ -36,12 +36,12 @@ export async function generatePassesForTeam(teamId: string) {
   console.log(`Generating passes for team: ${team.team_name}`)
   console.time('Total Pass Generation')
 
-  // Register custom font to fix fontconfig error
+  // Register Inter font to fix fontconfig error
   try {
-    registerFont(path.join(process.cwd(), 'public', 'fonts', 'BitcountSingle-Regular.ttf'), { family: 'BitcountSingle', weight: '400', style: 'normal' })
-    console.log('✅ Custom font registered: public/fonts/BitcountSingle-Regular.ttf')
+    registerFont(path.join(process.cwd(), 'public', 'fonts', 'Inter-Regular.ttf'), { family: 'Inter', weight: '400', style: 'normal' })
+    console.log('✅ Inter font registered: public/fonts/Inter.ttf')
   } catch (fontError) {
-    console.warn('⚠️ Failed to register custom font:', fontError)
+    console.warn('⚠️ Failed to register Inter font:', fontError)
   }
 
   // Generate and upload passes for each member in parallel
