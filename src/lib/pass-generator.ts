@@ -17,7 +17,7 @@ let fontsRegistered = false;
 function ensureFontsRegistered() {
   if (fontsRegistered) return;
   
-  const fontDir = path.join(process.cwd(), 'public', 'fonts');
+  const fontDir = path.join(process.cwd(), 'public', 'font');
   
   const bitcountPath = path.join(fontDir, 'BitcountSingle-VariableFont_CRSV,ELSH,ELXP,slnt,wght.ttf');
   
