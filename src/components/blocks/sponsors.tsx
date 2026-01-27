@@ -3,18 +3,18 @@ import React from "react";
 function Sponsors() {
   return (
     <div id="sponsors" className="relative w-full min-h-[60vh] md:min-h-[70vh] pb-16 md:pb-26">
-      <div className="mx-4 sm:mx-6 md:mx-8 h-20 w-auto max-w-xs text-xl sm:text-2xl flex items-center justify-center gap-2 pt-20 sm:pt-28 md:pt-34">
-        <span className="bg-neutral-300 h-1 w-8 sm:w-12"></span>
-        <span className="text-white flex items-center justify-center whitespace-nowrap">
-          Sponsorships
-        </span>
-      </div>
+      <div className="relative z-20 mx-4 sm:mx-6 md:mx-8 lg:mx-16 mb-8 sm:mb-10 md:mb-12">
+        <div className="flex items-center justify-start gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <span className="bg-neutral-300 h-1 w-8 sm:w-12"></span>
+          <span className="text-white text-base sm:text-lg md:text-xl tracking-tight">Sponsors</span>
+        </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
-          <span className="text-neutral-500">Meet our </span>
-          <span className="text-white">Partners</span>
-        </h2>
+        <div className="max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-justify">
+            <span className="text-neutral-500">Meet our </span>
+            <span className="text-white">Sponsors</span>
+          </h2>
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8">

@@ -35,8 +35,6 @@ export async function generatePassesForTeam(teamId: string) {
   console.log(`Generating passes for team: ${team.team_name}`)
   console.time('Total Pass Generation')
 
-  // Fonts are registered in pass-generator.ts
-
   // Generate and upload passes for each member in parallel
   const passPromises = team.team_members.map(async (member: any) => {
     console.log(`🎫 Generating pass for: ${member.member_name} (${member.member_email})`)

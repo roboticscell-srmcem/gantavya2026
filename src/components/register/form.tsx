@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,10 @@ export function RegistrationForm({
   const [submitMessage, setSubmitMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
+
+  // New states for enhancements
+  const [lastSubmitTime, setLastSubmitTime] = useState<number>(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -124,84 +128,158 @@ export function RegistrationForm({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Helper functions for enhancements
+  const sanitizeInput = (input: string) => {
+    return input.trim().replace(/[<>]/g, ''); // Remove potential XSS characters
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const isValid = emailRegex.test(email);
+    const hasValidDomain = email.split('@')[1]?.includes('.');
+    return isValid && hasValidDomain && email.length <= 254;
+  };
+
+  const validatePhone = (phone: string) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    return /^[6-9]\d{9}$/.test(cleanPhone);
+  };
+
+  const validateTransactionId = (txnId: string) => {
+    return /^[A-Za-z0-9]{12}$/.test(txnId);
+  };
+
+  const validateName = (name: string) => {
+    return /^[a-zA-Z\s.'-]{2,100}$/.test(name);
+  };
+
+  // Custom debounce for email validation
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func.apply(null, args), delay);
+    };
+  };
+
+  const checkEmailFormat = useCallback(
+    debounce((email: string, fieldName: string) => {
+      if (email && !validateEmail(email)) {
+        setSubmitStatus('error');
+        setSubmitMessage(`Invalid email format for ${fieldName}`);
+      }
+    }, 500),
+    []
+  );
+
   // Validations
   const validateStep1 = () => {
-    if (!formData.teamName || formData.teamName.length < 3) {
+    const trimmedTeamName = sanitizeInput(formData.teamName);
+    const trimmedLeaderName = sanitizeInput(formData.leaderName);
+    const trimmedLeaderEmail = sanitizeInput(formData.leaderEmail);
+    const trimmedLeaderPhone = sanitizeInput(formData.leaderPhone);
+    const trimmedCollege = sanitizeInput(formData.college);
+
+    if (!trimmedTeamName || trimmedTeamName.length < 3 || trimmedTeamName.length > 50) {
       setSubmitStatus('error');
-      setSubmitMessage('Team name must be at least 3 characters');
+      setSubmitMessage('Team name must be 3-50 characters');
       return false;
     }
-    if (!formData.leaderName || formData.leaderName.length < 2) {
+    if (!validateName(trimmedLeaderName)) {
       setSubmitStatus('error');
-      setSubmitMessage('Leader name must be at least 2 characters');
+      setSubmitMessage('Leader name can only contain letters, spaces, and basic punctuation');
       return false;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.leaderEmail)) {
+    if (!validateEmail(trimmedLeaderEmail)) {
       setSubmitStatus('error');
       setSubmitMessage('Please enter a valid email address');
       return false;
     }
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.leaderPhone)) {
+    if (!validatePhone(trimmedLeaderPhone)) {
       setSubmitStatus('error');
-      setSubmitMessage('Please enter a valid 10-digit phone number');
+      setSubmitMessage('Please enter a valid 10-digit phone number starting with 6-9');
       return false;
     }
-    if (!formData.college || formData.college.length < 2) {
+    if (!trimmedCollege || trimmedCollege.length < 2 || trimmedCollege.length > 200) {
       setSubmitStatus('error');
-      setSubmitMessage('College name is required');
+      setSubmitMessage('College name is required (2-200 characters)');
       return false;
     }
     return true;
   };
 
   const validateStep2 = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10}$/;
-    
     for (let i = 0; i < members.length; i++) {
       const member = members[i];
-      if (member.name || member.email || member.phone) {
-        if (!member.name || member.name.length < 2) {
+      const trimmedName = sanitizeInput(member.name);
+      const trimmedEmail = sanitizeInput(member.email);
+      const trimmedPhone = sanitizeInput(member.phone);
+      const trimmedCollege = sanitizeInput(member.college);
+
+      if (trimmedName || trimmedEmail || trimmedPhone) {
+        if (!validateName(trimmedName)) {
           setSubmitStatus('error');
-          setSubmitMessage(`Member ${i + 1}: Name must be at least 2 characters`);
+          setSubmitMessage(`Member ${i + 1}: Name can only contain letters, spaces, and basic punctuation`);
           return false;
         }
-        if (!member.email || !emailRegex.test(member.email)) {
+        if (!validateEmail(trimmedEmail)) {
           setSubmitStatus('error');
           setSubmitMessage(`Member ${i + 1}: Please enter a valid email address`);
           return false;
         }
-        if (!member.phone || !phoneRegex.test(member.phone)) {
+        if (!validatePhone(trimmedPhone)) {
           setSubmitStatus('error');
-          setSubmitMessage(`Member ${i + 1}: Please enter a valid 10-digit phone number`);
+          setSubmitMessage(`Member ${i + 1}: Please enter a valid 10-digit phone number starting with 6-9`);
+          return false;
+        }
+        if (trimmedCollege && (trimmedCollege.length < 2 || trimmedCollege.length > 200)) {
+          setSubmitStatus('error');
+          setSubmitMessage(`Member ${i + 1}: College must be 2-200 characters`);
           return false;
         }
       }
     }
     
     const validMembers = members.filter(m => m.email);
-    const emails = [formData.leaderEmail, ...validMembers.map(m => m.email)];
+    const emails = [formData.leaderEmail.toLowerCase(), ...validMembers.map(m => m.email.toLowerCase())];
     const uniqueEmails = new Set(emails);
     if (uniqueEmails.size !== emails.length) {
       setSubmitStatus('error');
       setSubmitMessage('Each team member must have a unique email address');
       return false;
     }
+
+    const phones = [formData.leaderPhone, ...validMembers.map(m => m.phone)];
+    const uniquePhones = new Set(phones);
+    if (uniquePhones.size !== phones.length) {
+      setSubmitStatus('error');
+      setSubmitMessage('Each team member must have a unique phone number');
+      return false;
+    }
+
+    const totalMembers = validMembers.length + 1;
+    if (totalMembers < minTeamSize) {
+      setSubmitStatus('error');
+      setSubmitMessage(`Minimum team size is ${minTeamSize}. You have ${totalMembers} member(s).`);
+      return false;
+    }
+    
     return true;
   };
 
   const validateStep3 = () => {
     if (registrationFee > 0) {
-      if (!paymentData.transactionId || paymentData.transactionId.length < 6) {
+      const trimmedTransactionId = sanitizeInput(paymentData.transactionId);
+      const trimmedAccountHolderName = sanitizeInput(paymentData.accountHolderName);
+
+      if (!validateTransactionId(trimmedTransactionId)) {
         setSubmitStatus('error');
-        setSubmitMessage('Please enter a valid transaction ID (at least 6 characters)');
+        setSubmitMessage('Invalid transaction ID format (12 alphanumeric characters)');
         return false;
       }
-      if (!paymentData.accountHolderName || paymentData.accountHolderName.length < 2) {
+      if (!validateName(trimmedAccountHolderName)) {
         setSubmitStatus('error');
-        setSubmitMessage('Please enter the account holder name');
+        setSubmitMessage('Account holder name can only contain letters, spaces, and basic punctuation');
         return false;
       }
     }
@@ -224,7 +302,7 @@ export function RegistrationForm({
 
   const addMember = () => {
     if (members.length < maxTeamSize - 1) {
-      setMembers([...members, { name: '', email: '', phone: '', college: formData.college }]);
+      setMembers([...members, { name: '', email: '', phone: '', college: formData.college }]); // Auto-populate college
     }
   };
 
@@ -234,16 +312,34 @@ export function RegistrationForm({
 
   const updateMember = (index: number, field: keyof TeamMember, value: string) => {
     const updated = [...members];
-    updated[index][field] = value;
+    updated[index][field] = sanitizeInput(value); // Sanitize on update
     setMembers(updated);
+    if (field === 'email') {
+      checkEmailFormat(value, `Member ${index + 1}`);
+    }
   };
 
   const handleSubmit = async () => {
+    const now = Date.now();
+    if (now - lastSubmitTime < 5000) {
+      setSubmitStatus('error');
+      setSubmitMessage('Please wait before submitting again');
+      return;
+    }
+    setLastSubmitTime(now);
+
+    if (isSubmitted) {
+      setSubmitStatus('error');
+      setSubmitMessage('Form already submitted');
+      return;
+    }
+
     if (!validateStep3()) return;
 
     try {
       setSubmitStatus('processing');
       setSubmitMessage('Submitting your registration...');
+      setIsSubmitted(true);
 
       const registerResponse = await fetch('/api/teams/register', {
         method: 'POST',
@@ -287,15 +383,34 @@ export function RegistrationForm({
     } catch (error: any) {
       setSubmitStatus('error');
       setSubmitMessage(error.message || 'Registration failed. Please try again.');
+      setIsSubmitted(false); // Allow retry on error
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: sanitizeInput(e.target.value) });
+    if (e.target.name === 'leaderEmail') {
+      checkEmailFormat(e.target.value, 'Leader');
+    }
   };
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPaymentData({ ...paymentData, [e.target.name]: e.target.value });
+    setPaymentData({ ...paymentData, [e.target.name]: sanitizeInput(e.target.value) });
+  };
+
+  const handleClose = () => {
+    // Clear sensitive data for security
+    setPaymentData({ transactionId: '', accountHolderName: '' });
+    setFormData({
+      teamName: '',
+      leaderName: '',
+      leaderEmail: '',
+      leaderPhone: '',
+      college: '',
+    });
+    setMembers([]);
+    setIsSubmitted(false);
+    onClose();
   };
 
   // Prevent scroll propagation
@@ -313,7 +428,7 @@ export function RegistrationForm({
       <SplashScreen 
         onClose={() => {
           setShowSplash(false);
-          onClose();
+          handleClose();
         }} 
       />
     );
@@ -340,7 +455,7 @@ export function RegistrationForm({
                 <p className="text-sm text-neutral-400 mt-1">Fill in the details below</p>
               </div>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="flex-none p-2 hover:bg-neutral-800 rounded-lg transition-colors"
                 aria-label="Close"
               >
@@ -423,6 +538,8 @@ export function RegistrationForm({
                       onChange={handleChange}
                       placeholder="Enter your team name"
                       className="bg-neutral-800 border-neutral-700 text-white"
+                      maxLength={50}
+                      minLength={3}
                     />
                   </div>
 
@@ -443,6 +560,9 @@ export function RegistrationForm({
                           onChange={handleChange}
                           placeholder="John Doe"
                           className="bg-neutral-800 border-neutral-700 text-white"
+                          maxLength={100}
+                          minLength={2}
+                          autoComplete="name"
                         />
                       </div>
 
@@ -458,6 +578,8 @@ export function RegistrationForm({
                           onChange={handleChange}
                           placeholder="john@example.com"
                           className="bg-neutral-800 border-neutral-700 text-white"
+                          maxLength={254}
+                          autoComplete="email"
                         />
                       </div>
 
@@ -472,6 +594,10 @@ export function RegistrationForm({
                           onChange={handleChange}
                           placeholder="9876543210"
                           className="bg-neutral-800 border-neutral-700 text-white"
+                          maxLength={10}
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          autoComplete="tel"
                         />
                       </div>
 
@@ -486,6 +612,7 @@ export function RegistrationForm({
                           onChange={handleChange}
                           placeholder="Your college name"
                           className="bg-neutral-800 border-neutral-700 text-white"
+                          maxLength={200}
                         />
                       </div>
                     </div>
@@ -558,6 +685,8 @@ export function RegistrationForm({
                               value={member.name}
                               onChange={(e) => updateMember(index, 'name', e.target.value)}
                               className="bg-neutral-800 border-neutral-700 text-white text-sm"
+                              maxLength={100}
+                              minLength={2}
                             />
                             <Input
                               placeholder="Email *"
@@ -565,18 +694,23 @@ export function RegistrationForm({
                               value={member.email}
                               onChange={(e) => updateMember(index, 'email', e.target.value)}
                               className="bg-neutral-800 border-neutral-700 text-white text-sm"
+                              maxLength={254}
                             />
                             <Input
                               placeholder="Phone (10 digits) *"
                               value={member.phone}
                               onChange={(e) => updateMember(index, 'phone', e.target.value)}
                               className="bg-neutral-800 border-neutral-700 text-white text-sm"
+                              maxLength={10}
+                              pattern="[0-9]*"
+                              inputMode="numeric"
                             />
                             <Input
                               placeholder="College"
                               value={member.college}
                               onChange={(e) => updateMember(index, 'college', e.target.value)}
                               className="bg-neutral-800 border-neutral-700 text-white text-sm"
+                              maxLength={200}
                             />
                           </div>
                         </div>
@@ -682,6 +816,8 @@ export function RegistrationForm({
                             onChange={handlePaymentChange}
                             placeholder="e.g., 123456789012"
                             className="bg-neutral-700 border-neutral-600 text-white"
+                            maxLength={12}
+                            minLength={12}
                           />
                         </div>
 
@@ -696,6 +832,8 @@ export function RegistrationForm({
                             onChange={handlePaymentChange}
                             placeholder="Name on bank account"
                             className="bg-neutral-700 border-neutral-600 text-white"
+                            maxLength={100}
+                            minLength={2}
                           />
                         </div>
                       </div>
@@ -739,7 +877,7 @@ export function RegistrationForm({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex-1"
                 >
                   Cancel
@@ -760,7 +898,7 @@ export function RegistrationForm({
                   type="button"
                   onClick={handleSubmit}
                   className="flex-1 bg-orange-600 hover:bg-orange-700"
-                  disabled={submitStatus === 'success' || submitStatus === 'processing'}
+                  disabled={submitStatus === 'success' || submitStatus === 'processing' || isSubmitted}
                 >
                   {submitStatus === 'processing' ? 'Submitting...' : submitStatus === 'success' ? 'Done!' : 'Complete Registration'}
                 </Button>

@@ -5,25 +5,25 @@ import { sendEmail, getRegistrationReceivedEmail } from '@/lib/email'
 
 // Validation schemas
 const memberSchema = z.object({
-  member_name: z.string().min(2, 'Name must be at least 2 characters'),
-  member_email: z.string().email('Invalid email address'),
-  member_contact: z.string().regex(/^[0-9]{10}$/, 'Contact must be 10 digits'),
+  member_name: z.string().regex(/^[a-zA-Z\s.'-]{2,100}$/, 'Name must be 2-100 characters with only letters, spaces, dots, hyphens, or apostrophes'),
+  member_email: z.string().email('Invalid email address').max(254, 'Email too long'),
+  member_contact: z.string().regex(/^[6-9]\d{9}$/, 'Contact must be 10 digits starting with 6-9'),
 })
 
 const paymentSchema = z.object({
-  transaction_id: z.string().min(6, 'Transaction ID must be at least 6 characters'),
-  account_holder_name: z.string().min(2, 'Account holder name must be at least 2 characters'),
+  transaction_id: z.string().regex(/^[A-Za-z0-9]{12}$/, 'Transaction ID must be 10 alphanumeric characters'),
+  account_holder_name: z.string().regex(/^[a-zA-Z\s.'-]{2,100}$/, 'Account holder name must be 2-100 characters with only letters, spaces, dots, hyphens, or apostrophes'),
   amount: z.number().positive('Amount must be positive'),
 }).nullable().optional()
 
 const registrationSchema = z.object({
   event_id: z.string().uuid('Invalid event ID'),
-  team_name: z.string().min(2, 'Team name must be at least 2 characters'),
-  college_name: z.string().min(2, 'College name must be at least 2 characters'),
+  team_name: z.string().min(3, 'Team name must be at least 3 characters').max(50, 'Team name too long'),
+  college_name: z.string().min(2, 'College name must be at least 2 characters').max(200, 'College name too long'),
   captain: z.object({
-    name: z.string().min(2, 'Captain name must be at least 2 characters'),
-    email: z.string().email('Invalid captain email'),
-    contact: z.string().regex(/^[0-9]{10}$/, 'Contact must be 10 digits'),
+    name: z.string().regex(/^[a-zA-Z\s.'-]{2,100}$/, 'Captain name must be 2-100 characters with only letters, spaces, dots, hyphens, or apostrophes'),
+    email: z.string().email('Invalid captain email').max(254, 'Email too long'),
+    contact: z.string().regex(/^[6-9]\d{9}$/, 'Contact must be 10 digits starting with 6-9'),
   }),
   members: z.array(memberSchema).optional(),
   payment: paymentSchema,
@@ -81,17 +81,16 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Check if captain email is already registered for this event
+    // 3. Check if captain email is already registered (global, as per DB constraint)
     const { data: existingTeam } = await supabase
       .from('teams')
       .select('id')
       .eq('captain_email', captain.email)
-      .eq('event_id', event_id)
       .single()
 
     if (existingTeam) {
       return NextResponse.json(
-        { error: 'This email is already registered for this event' },
+        { error: 'This email is already registered as a team member and cannot participate in more than one event' },
         { status: 400 }
       )
     }
